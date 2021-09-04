@@ -38,7 +38,8 @@ public class Dot : EventTrigger
         bool isPointedToNeighbor = this.IsNeighborOf(lastDotPointed);
         if (isPointedToNeighbor)
         {
-            if (IsBackAtPreviousDot(lastDotPointed))
+            bool isBackAtLastDotPointed = this.IsBackTo(lastDotPointed);
+            if (isBackAtLastDotPointed)
             {
                 DotsLineRenderer.Instance.RemoveLastConnectedDotInLine();
                 lastDotPointed.PreviousDot = null;
@@ -65,7 +66,7 @@ public class Dot : EventTrigger
         return neighbors.Contains(dot);
     }
 
-    private bool IsBackAtPreviousDot(Dot dot)
+    private bool IsBackTo(Dot dot)
     {
         return this == dot.PreviousDot;
     }
