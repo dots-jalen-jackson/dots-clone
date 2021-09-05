@@ -625,13 +625,5 @@ PrefabInstance:
       propertyPath: m_Name
       value: DotsBoard
       objectReference: {fileID: 0}
-    - target: {fileID: 4744882345616421852, guid: fba04244f4a85be46b784bcff6d0162a, type: 3}
-      propertyPath: _boardWidth
-      value: 4
-      objectReference: {fileID: 0}
-    - target: {fileID: 4744882345616421852, guid: fba04244f4a85be46b784bcff6d0162a, type: 3}
-      propertyPath: _boardHeight
-      value: 4
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: fba04244f4a85be46b784bcff6d0162a, type: 3}
