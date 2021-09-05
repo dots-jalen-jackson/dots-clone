@@ -1,19 +1,18 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using JetBrains.Annotations;
-using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
 
 public class Dot : EventTrigger
 {
     public int Row { get; set; }
     public int Col { get; set; }
-    public Dot PreviousDot { get; set; }
+
+    private Stack<Dot> _prevDots;
+
+    private void Start()
+    {
+        _prevDots = new Stack<Dot>();
+    }
 
     public override void OnBeginDrag(PointerEventData eventData)
     {
@@ -35,39 +34,49 @@ public class Dot : EventTrigger
             return;
         
         Dot lastDotPointed = eventData.pointerDrag.GetComponent<Dot>();
-        bool isPointedToNeighbor = this.IsNeighborOf(lastDotPointed);
-        if (isPointedToNeighbor)
+        
+        bool isLastDotNeighbor = this.IsAround(lastDotPointed);
+        if (!isLastDotNeighbor) 
+            return;
+        
+        bool isEdgeExists = DotsBoard.Instance.ContainsEdge(lastDotPointed, this);
+        if (isEdgeExists)
+            return;
+        
+        bool isEdgeExistsInOppositeDirection = DotsBoard.Instance.ContainsEdge(this, lastDotPointed);
+        if (isEdgeExistsInOppositeDirection)
         {
-            bool isBackAtLastDotPointed = this.IsBackTo(lastDotPointed);
-            if (isBackAtLastDotPointed)
-            {
-                DotsLineRenderer.Instance.RemoveLastConnectedDotInLine();
-                lastDotPointed.PreviousDot = null;
-            }
-            else
-            {
-                DotsLineRenderer.Instance.ConnectDotsInLine(lastDotPointed, this);
-                PreviousDot = lastDotPointed;
-            }
-            
-            eventData.pointerDrag = gameObject;
+            bool isOnPreviousDot = this == lastDotPointed._prevDots.Peek();
+            if (!isOnPreviousDot)
+                return;
+
+            DotsLineRenderer.Instance.RemoveLastConnectedDotInLine();
+            DotsBoard.Instance.RemoveEdge(this, lastDotPointed);
+            DotsBoard.Instance.RemoveEdge(lastDotPointed, this);
+
+            lastDotPointed._prevDots.Pop();
         }
+        else
+        {
+            DotsLineRenderer.Instance.ConnectDots(lastDotPointed, this);
+            DotsBoard.Instance.AddEdge(lastDotPointed, this);
+            
+            _prevDots.Push(lastDotPointed);
+        }
+            
+        eventData.pointerDrag = gameObject;
     }
 
     public override void OnEndDrag(PointerEventData eventData)
     {
         DotsLineRenderer.Instance.ClearLine();
-        DotsBoard.Instance.ResetPreviousDots();
+        DotsBoard.Instance.ClearEdges();
+        DotsBoard.Instance.UnvisitAllDots();
     }
 
-    private bool IsNeighborOf(Dot dot)
+    private bool IsAround(Dot dot)
     {
-        List<Dot> neighbors = DotsBoard.Instance.GetNeighbors(this);
-        return neighbors.Contains(dot);
-    }
-
-    private bool IsBackTo(Dot dot)
-    {
-        return this == dot.PreviousDot;
+        List<Dot> surroundingDots = DotsBoard.Instance.GetDotsAround(dot);
+        return surroundingDots.Contains(this);
     }
 }
