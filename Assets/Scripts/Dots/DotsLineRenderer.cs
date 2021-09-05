@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using UnityEngine;
-using UnityEngine.PlayerLoop;
+﻿using UnityEngine;
 using Vector2 = UnityEngine.Vector2;
 using Vector3 = UnityEngine.Vector3;
 
@@ -41,7 +34,7 @@ public class DotsLineRenderer : Singleton<DotsLineRenderer>
         UpdateCurrentPosition(dot.transform.position);
     }
 
-    public void ConnectDotsInLine(Dot beginDot, Dot endDot)
+    public void ConnectDots(Dot beginDot, Dot endDot)
     {
         Vector2 beginPosition = beginDot.transform.position;
         Vector2 endPosition = endDot.transform.position;
@@ -49,6 +42,7 @@ public class DotsLineRenderer : Singleton<DotsLineRenderer>
         StrengthenConnectionBetweenDots(beginPosition, endPosition);
         AddDotToLine(endDot);
     }
+    
     public void RemoveLastConnectedDotInLine()
     {
         _lineRenderer.positionCount -= 3;
