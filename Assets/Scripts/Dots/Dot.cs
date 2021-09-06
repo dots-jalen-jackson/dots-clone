@@ -1,21 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Numerics;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using Vector2 = UnityEngine.Vector2;
 
 public class Dot : EventTrigger
 {
     private RectTransform _rectTransform;
     private Image _image;
 
-    public int Row => DotsBoard.Instance.GetRowAtPosition(_rectTransform.anchoredPosition);
-    public int Col => DotsBoard.Instance.GetColAtPosition(_rectTransform.anchoredPosition);
+    public int Row => DotsBoard.Instance.GetRowAtPosition(Position);
+    public int Col => DotsBoard.Instance.GetColAtPosition(Position);
 
     public Color Color
     {
         get => _image.color;
         set => _image.color = value;
+    }
+
+    public Vector2 Position
+    {
+        get => _rectTransform.anchoredPosition;
+        set => _rectTransform.anchoredPosition = value;
     }
 
     public void Awake()

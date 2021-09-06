@@ -11,7 +11,7 @@ public class DotsBoard : Singleton<DotsBoard>
     [SerializeField] private Color[] _dotColors;
     [SerializeField] private int _seed;
 
-    private GridLayoutGroup _boardLayout;
+    private RectTransform _rectTransform;
     
     private ObjectPooler _dotsPooler;
     private Dot [,] _dots;
@@ -20,22 +20,38 @@ public class DotsBoard : Singleton<DotsBoard>
     private bool[,] _edges;
     private bool[] _visited;
 
+    private int _dotSize;
+
     private int NumDots => _dotsPooler.ObjectPoolSize;
 
     public bool IsSquareFormed() => _formedSquareDots.Count > 0;
 
     private void Awake()
     {
-        _boardLayout = GetComponent<GridLayoutGroup>();
+        _rectTransform = GetComponent<RectTransform>();
         
         _dotsPooler = GetComponent<ObjectPooler>();
         _dotsPooler.ObjectPoolSize = _boardWidth * _boardHeight;
         _dotsPooler.GenerateObjects();
+
+        GameObject dot = _dotsPooler.ObjectPrefab;
+        RectTransform dotTransform = dot.GetComponent<RectTransform>();
+        _dotSize = (int) dotTransform.rect.width;
     }
 
     private void Start()
     {
+        CenterBoard();
         PopulateDots();
+    }
+
+    private void CenterBoard()
+    {
+        float centerSpacing = (float)_dotSize / 2;
+        
+        float centerX = -centerSpacing * _boardWidth;
+        float centerY = centerSpacing * _boardHeight;
+        _rectTransform.anchoredPosition = new Vector2(centerX, centerY);
     }
 
     private void PopulateDots()
@@ -56,6 +72,8 @@ public class DotsBoard : Singleton<DotsBoard>
             {
                 _dots[i, j] = _dotsPooler.GetPooledObject().GetComponent<Dot>();
                 _dots[i, j].Color = GenerateRandomColor();
+                _dots[i, j].Position = new Vector2(GetXAt(i), GetYAt(j));
+                _dots[i, j].name = $"Dot {_dots[i, j].Row}, {_dots[i, j].Col}";
                 _dots[i, j].gameObject.SetActive(true);
             }
         }
@@ -68,14 +86,16 @@ public class DotsBoard : Singleton<DotsBoard>
 
     public int GetRowAtPosition(Vector2 position)
     {
+        float spacing = _dotSize * 2;
         float y = position.y;
-        return ((int) ((_boardLayout.spacing.y * 2) - y) / NumDots) - 1;
+        return ((int) (spacing - y) / NumDots);
     }
 
     public int GetColAtPosition(Vector2 position)
     {
+        float spacing = _dotSize * 2;
         float x = position.x;
-        return ((int) (x + (_boardLayout.spacing.x * 2)) / NumDots) - 1;
+        return ((int) (x + spacing) / NumDots);
     }
     
     public void AddEdge(Dot src, Dot dst)
@@ -232,6 +252,18 @@ public class DotsBoard : Singleton<DotsBoard>
     private int GetIndex(Dot dot)
     {
         return dot.Col * _boardWidth + dot.Row;
+    }
+
+    private float GetXAt(int col)
+    {
+        float spacing = _dotSize * 2;
+        return (spacing * col) - spacing;
+    }
+
+    private float GetYAt(int row)
+    {
+        float spacing = _dotSize * 2;
+        return spacing - (spacing * row);
     }
 
     private Color GenerateRandomColor()

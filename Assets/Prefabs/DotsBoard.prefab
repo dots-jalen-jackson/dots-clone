@@ -9,10 +9,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4744882345616421850}
-  - component: {fileID: 4744882345616421855}
   - component: {fileID: 4744882345616421852}
   - component: {fileID: 4744882345616421853}
-  - component: {fileID: 4744882345616421854}
   m_Layer: 5
   m_Name: DotsBoard
   m_TagString: Untagged
@@ -39,30 +37,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &4744882345616421855
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4744882345616421851}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8a8695521f0d02e499659fee002a26c2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Padding:
-    m_Left: 0
-    m_Right: 0
-    m_Top: 0
-    m_Bottom: 0
-  m_ChildAlignment: 4
-  m_StartCorner: 3
-  m_StartAxis: 0
-  m_CellSize: {x: 20, y: 20}
-  m_Spacing: {x: 20, y: 20}
-  m_Constraint: 0
-  m_ConstraintCount: 6
 --- !u!114 &4744882345616421852
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -83,6 +57,7 @@ MonoBehaviour:
   - {r: 0.07450981, g: 0.42352942, b: 0.2627451, a: 1}
   - {r: 0.9254902, g: 0.93333334, b: 0.43529412, a: 1}
   - {r: 0.85882354, g: 0.33333334, b: 0.25882354, a: 1}
+  _seed: 0
 --- !u!114 &4744882345616421853
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -97,17 +72,3 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _objectPrefab: {fileID: 8858756726689386959, guid: 87c688d1b6c813b4c8d3a900327320b4, type: 3}
   _isExpandable: 0
---- !u!114 &4744882345616421854
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4744882345616421851}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_HorizontalFit: 2
-  m_VerticalFit: 2
