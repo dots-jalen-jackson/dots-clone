@@ -1,4 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
+using Unity.Rendering.HybridV2;
 using UnityEngine;
 
 [DefaultExecutionOrder(0)]
@@ -8,6 +11,8 @@ public class DotsBoard : Singleton<DotsBoard>
     [SerializeField] private int _boardHeight = 6;
     [SerializeField] private Color[] _dotColors;
     [SerializeField] private int _seed;
+    
+    public bool IsSquareFormed { get; set; }
     
     private ObjectPooler _dotsPooler;
     private Dot [,] _dots;
@@ -150,6 +155,53 @@ public class DotsBoard : Singleton<DotsBoard>
         }
 
         return neighbors;
+    }
+
+    public List<Dot> GetDotsOnLine(Dot src)
+    {
+        List<Dot> dots = new List<Dot>();
+        
+        Stack<Dot> s = new Stack<Dot>();
+        s.Push(src);
+
+        string message = string.Empty;
+
+        while (s.Count > 0)
+        {
+            Dot cur = s.Pop();
+            dots.Add(cur);
+            
+            int curIndex = GetIndex(cur);
+            _visited[curIndex] = true;
+
+            foreach (Dot dst in cur.PreviousDots)
+            {
+                int dstIndex = GetIndex(dst);
+                if (_visited[dstIndex])
+                    continue;
+
+                s.Push(dst);
+            }
+        }
+
+        return dots;
+    }
+
+    public List<Dot> GetDotsWithColor(Color color)
+    {
+        List<Dot> dots = new List<Dot>();
+        
+        for (int i = 0; i < _boardWidth; i++)
+        {
+            for (int j = 0; j < _boardHeight; j++)
+            {
+                Dot dot = _dots[i, j];
+                if (dot.Color == color)
+                    dots.Add(dot);
+            }
+        }
+
+        return dots;
     }
     
     private int GetIndex(Dot dot)

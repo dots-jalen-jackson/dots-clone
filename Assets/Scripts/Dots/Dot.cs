@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -13,6 +14,8 @@ public class Dot : EventTrigger
         get => GetComponent<Image>().color;
         set => GetComponent<Image>().color = value;
     }
+
+    public Stack<Dot> PreviousDots => _prevDots;
 
     private Stack<Dot> _prevDots;
     private Color _color;
@@ -71,8 +74,12 @@ public class Dot : EventTrigger
             DotsBoard.Instance.AddEdge(lastDotPointed, this);
             
             _prevDots.Push(lastDotPointed);
-            
-            int numEdgesAtDot = DotsBoard.Instance.CountEdgesAt(this) + 1;
+
+            if (!DotsBoard.Instance.IsSquareFormed)
+            {
+                int numEdgesAtDot = DotsBoard.Instance.CountEdgesAt(this) + 1;
+                DotsBoard.Instance.IsSquareFormed = numEdgesAtDot > 1;
+            }
         }
             
         eventData.pointerDrag = gameObject;
@@ -80,6 +87,14 @@ public class Dot : EventTrigger
 
     public override void OnEndDrag(PointerEventData eventData)
     {
+        List<Dot> dotsToRemove;
+        if (DotsBoard.Instance.IsSquareFormed)
+            dotsToRemove = DotsBoard.Instance.GetDotsWithColor(Color);
+        else
+            dotsToRemove = DotsBoard.Instance.GetDotsOnLine(this);
+        
+        //TODO Remove dots from board
+        
         DotsLineRenderer.Instance.ClearLine();
         DotsBoard.Instance.ClearEdges();
         DotsBoard.Instance.UnvisitAllDots();
