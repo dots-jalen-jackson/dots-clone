@@ -20,6 +20,8 @@ public class ObjectPooler : MonoBehaviour
         get => _objectPoolSize;
         set => _objectPoolSize = value;
     }
+
+    public GameObject ObjectPrefab => _objectPrefab;
     
 #pragma warning restore 0649
 
