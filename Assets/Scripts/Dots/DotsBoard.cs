@@ -1,8 +1,7 @@
 ﻿using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using JetBrains.Annotations;
-using Unity.Rendering.HybridV2;
 using UnityEngine;
+using UnityEngine.UI;
+using Vector2 = UnityEngine.Vector2;
 
 [DefaultExecutionOrder(0)]
 public class DotsBoard : Singleton<DotsBoard>
@@ -11,6 +10,8 @@ public class DotsBoard : Singleton<DotsBoard>
     [SerializeField] private int _boardHeight = 6;
     [SerializeField] private Color[] _dotColors;
     [SerializeField] private int _seed;
+
+    private GridLayoutGroup _boardLayout;
     
     private ObjectPooler _dotsPooler;
     private Dot [,] _dots;
@@ -25,6 +26,8 @@ public class DotsBoard : Singleton<DotsBoard>
 
     private void Awake()
     {
+        _boardLayout = GetComponent<GridLayoutGroup>();
+        
         _dotsPooler = GetComponent<ObjectPooler>();
         _dotsPooler.ObjectPoolSize = _boardWidth * _boardHeight;
         _dotsPooler.GenerateObjects();
@@ -52,9 +55,6 @@ public class DotsBoard : Singleton<DotsBoard>
             for (int j = 0; j < _boardHeight; j++)
             {
                 _dots[i, j] = _dotsPooler.GetPooledObject().GetComponent<Dot>();
-                _dots[i, j].name = $"Dot {j}, {i}";
-                _dots[i, j].Row = j;
-                _dots[i, j].Col = i;
                 _dots[i, j].Color = GenerateRandomColor();
                 _dots[i, j].gameObject.SetActive(true);
             }
@@ -64,6 +64,18 @@ public class DotsBoard : Singleton<DotsBoard>
     public void ResetBoard()
     {
         ClearEdges();
+    }
+
+    public int GetRowAtPosition(Vector2 position)
+    {
+        float y = position.y;
+        return ((int) ((_boardLayout.spacing.y * 2) - y) / NumDots) - 1;
+    }
+
+    public int GetColAtPosition(Vector2 position)
+    {
+        float x = position.x;
+        return ((int) (x + (_boardLayout.spacing.x * 2)) / NumDots) - 1;
     }
     
     public void AddEdge(Dot src, Dot dst)

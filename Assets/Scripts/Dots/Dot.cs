@@ -6,13 +6,22 @@ using UnityEngine.UI;
 
 public class Dot : EventTrigger
 {
-    public int Row { get; set; }
-    public int Col { get; set; }
+    private RectTransform _rectTransform;
+    private Image _image;
+
+    public int Row => DotsBoard.Instance.GetRowAtPosition(_rectTransform.anchoredPosition);
+    public int Col => DotsBoard.Instance.GetColAtPosition(_rectTransform.anchoredPosition);
 
     public Color Color
     {
-        get => GetComponent<Image>().color;
-        set => GetComponent<Image>().color = value;
+        get => _image.color;
+        set => _image.color = value;
+    }
+
+    public void Awake()
+    {
+        _rectTransform = GetComponent<RectTransform>();
+        _image = GetComponent<Image>();
     }
 
     public override void OnBeginDrag(PointerEventData eventData)
