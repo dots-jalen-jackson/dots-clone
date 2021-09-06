@@ -1,12 +1,21 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class Dot : EventTrigger
 {
     public int Row { get; set; }
     public int Col { get; set; }
 
+    public Color Color
+    {
+        get => GetComponent<Image>().color;
+        set => GetComponent<Image>().color = value;
+    }
+
     private Stack<Dot> _prevDots;
+    private Color _color;
 
     private void Start()
     {
@@ -16,6 +25,7 @@ public class Dot : EventTrigger
     public override void OnBeginDrag(PointerEventData eventData)
     {
         DotsLineRenderer.Instance.AddDotToLine(this);
+        DotsLineRenderer.Instance.SetLineColor(Color);
     }
 
     public override void OnDrag(PointerEventData eventData)
@@ -77,7 +87,7 @@ public class Dot : EventTrigger
 
     private bool IsAround(Dot dot)
     {
-        List<Dot> surroundingDots = DotsBoard.Instance.GetDotsAround(dot);
+        List<Dot> surroundingDots = DotsBoard.Instance.GetSameColoredDotsAround(dot);
         return surroundingDots.Contains(this);
     }
 }

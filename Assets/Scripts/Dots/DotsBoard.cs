@@ -6,6 +6,8 @@ public class DotsBoard : Singleton<DotsBoard>
 {
     [SerializeField] private int _boardWidth = 6;
     [SerializeField] private int _boardHeight = 6;
+    [SerializeField] private Color[] _dotColors;
+    [SerializeField] private int _seed;
     
     private ObjectPooler _dotsPooler;
     private Dot [,] _dots;
@@ -31,6 +33,10 @@ public class DotsBoard : Singleton<DotsBoard>
         _dots = new Dot[_boardWidth, _boardHeight];
         _edges = new Dictionary<int, List<int>>();
         _visited = new bool[NumDots];
+        
+        #if UNITY_EDITOR
+            Random.InitState(_seed);
+        #endif
 
         for (int i = 0; i < _boardWidth; i++)
         {
@@ -40,6 +46,7 @@ public class DotsBoard : Singleton<DotsBoard>
                 _dots[i, j].name = $"Dot {j}, {i}";
                 _dots[i, j].Row = j;
                 _dots[i, j].Col = i;
+                _dots[i, j].Color = GenerateRandomColor();
                 _dots[i, j].gameObject.SetActive(true);
             }
         }
@@ -106,40 +113,53 @@ public class DotsBoard : Singleton<DotsBoard>
         return 0;
     }
 
-    public List<Dot> GetDotsAround(Dot dot)
+    public List<Dot> GetSameColoredDotsAround(Dot dot)
     {
         List<Dot> neighbors = new List<Dot>();
         
         if (dot.Row - 1 >= 0)
         {
             Dot upDot = _dots[dot.Col, dot.Row - 1];
-            neighbors.Add(upDot);
+            
+            if (upDot.Color == dot.Color)
+                neighbors.Add(upDot);
         }
         
         if (dot.Row + 1 < _boardHeight)
         {
             Dot downDot = _dots[dot.Col, dot.Row + 1];
-            neighbors.Add(downDot);
+            
+            if (downDot.Color == dot.Color)
+                neighbors.Add(downDot);
         }
 
         if (dot.Col - 1 >= 0)
         {
             Dot leftDot = _dots[dot.Col - 1, dot.Row];
-            neighbors.Add(leftDot);
+            
+            if (leftDot.Color == dot.Color)
+                neighbors.Add(leftDot);
         }
         
         if (dot.Col + 1 < _boardWidth)
         {
             Dot rightDot = _dots[dot.Col + 1, dot.Row];
-            neighbors.Add(rightDot);
+            
+            if (rightDot.Color == dot.Color)
+                neighbors.Add(rightDot);
         }
 
         return neighbors;
     }
     
-
-    public int GetIndex(Dot dot)
+    private int GetIndex(Dot dot)
     {
         return dot.Col * _boardWidth + dot.Row;
+    }
+
+    private Color GenerateRandomColor()
+    {
+        Color color = _dotColors[Random.Range(0, _dotColors.Length)];
+        return color;
     }
 }
