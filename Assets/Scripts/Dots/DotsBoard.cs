@@ -1,7 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Globalization;
-using Unity.Collections.LowLevel.Unsafe;
-using UnityEditor;
 using UnityEngine;
 
 [DefaultExecutionOrder(0)]
@@ -102,7 +99,11 @@ public class DotsBoard : Singleton<DotsBoard>
     public int CountEdgesAt(Dot src)
     {
         int srcIndex = GetIndex(src);
-        return _edges[srcIndex].Count;
+
+        if (_edges.TryGetValue(srcIndex, out List<int> dsts))
+            return dsts.Count;
+
+        return 0;
     }
 
     public List<Dot> GetDotsAround(Dot dot)

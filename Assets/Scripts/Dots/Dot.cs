@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine.EventSystems;
 
 public class Dot : EventTrigger
@@ -62,6 +61,8 @@ public class Dot : EventTrigger
             DotsBoard.Instance.AddEdge(lastDotPointed, this);
             
             _prevDots.Push(lastDotPointed);
+            
+            int numEdgesAtDot = DotsBoard.Instance.CountEdgesAt(this) + 1;
         }
             
         eventData.pointerDrag = gameObject;
