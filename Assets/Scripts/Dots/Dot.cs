@@ -15,16 +15,6 @@ public class Dot : EventTrigger
         set => GetComponent<Image>().color = value;
     }
 
-    public Stack<Dot> PreviousDots => _prevDots;
-
-    private Stack<Dot> _prevDots;
-    private Color _color;
-
-    private void Start()
-    {
-        _prevDots = new Stack<Dot>();
-    }
-
     public override void OnBeginDrag(PointerEventData eventData)
     {
         DotsLineRenderer.Instance.AddDotToLine(this);
@@ -53,51 +43,42 @@ public class Dot : EventTrigger
         
         bool isEdgeExists = DotsBoard.Instance.ContainsEdge(lastDotPointed, this);
         if (isEdgeExists)
-            return;
-        
-        bool isEdgeExistsInOppositeDirection = DotsBoard.Instance.ContainsEdge(this, lastDotPointed);
-        if (isEdgeExistsInOppositeDirection)
         {
-            bool isOnPreviousDot = this == lastDotPointed._prevDots.Peek();
-            if (!isOnPreviousDot)
+            bool isBackAtPreviousDot = DotsBoard.Instance.IsDotPreviousSource(this);
+            if (!isBackAtPreviousDot)
                 return;
-
+            
             DotsLineRenderer.Instance.RemoveLastConnectedDotInLine();
-            DotsBoard.Instance.RemoveEdge(this, lastDotPointed);
             DotsBoard.Instance.RemoveEdge(lastDotPointed, this);
-
-            lastDotPointed._prevDots.Pop();
         }
         else
         {
             DotsLineRenderer.Instance.ConnectDots(lastDotPointed, this);
             DotsBoard.Instance.AddEdge(lastDotPointed, this);
-            
-            _prevDots.Push(lastDotPointed);
-
-            if (!DotsBoard.Instance.IsSquareFormed)
-            {
-                int numEdgesAtDot = DotsBoard.Instance.CountEdgesAt(this) + 1;
-                DotsBoard.Instance.IsSquareFormed = numEdgesAtDot > 1;
-            }
         }
-            
+        
         eventData.pointerDrag = gameObject;
     }
 
     public override void OnEndDrag(PointerEventData eventData)
     {
         List<Dot> dotsToRemove;
-        if (DotsBoard.Instance.IsSquareFormed)
-            dotsToRemove = DotsBoard.Instance.GetDotsWithColor(Color);
+        if (!DotsBoard.Instance.IsSquareFormed())
+        {
+            dotsToRemove = DotsBoard.Instance.GetDotsInLineFrom(this);
+        }
         else
-            dotsToRemove = DotsBoard.Instance.GetDotsOnLine(this);
+        {
+            dotsToRemove = DotsBoard.Instance.GetDotsWithColor(Color);
+        }
         
-        //TODO Remove dots from board
-        
+        DotsBoard.Instance.ResetBoard();
         DotsLineRenderer.Instance.ClearLine();
-        DotsBoard.Instance.ClearEdges();
-        DotsBoard.Instance.UnvisitAllDots();
+
+        if (dotsToRemove.Count <= 0)
+            return;
+        
+        //TODO Remove dots in list
     }
 
     private bool IsAround(Dot dot)

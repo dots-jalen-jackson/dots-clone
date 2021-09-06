@@ -12,14 +12,16 @@ public class DotsBoard : Singleton<DotsBoard>
     [SerializeField] private Color[] _dotColors;
     [SerializeField] private int _seed;
     
-    public bool IsSquareFormed { get; set; }
-    
     private ObjectPooler _dotsPooler;
     private Dot [,] _dots;
-    private Dictionary<int, List<int>> _edges;
+    private Stack<Dot> _prevDots;
+    private Stack<Dot> _formedSquareDots;
+    private bool[,] _edges;
     private bool[] _visited;
 
     private int NumDots => _dotsPooler.ObjectPoolSize;
+
+    public bool IsSquareFormed() => _formedSquareDots.Count > 0;
 
     private void Awake()
     {
@@ -36,8 +38,10 @@ public class DotsBoard : Singleton<DotsBoard>
     private void PopulateDots()
     {
         _dots = new Dot[_boardWidth, _boardHeight];
-        _edges = new Dictionary<int, List<int>>();
+        _edges = new bool[NumDots * NumDots, NumDots * NumDots];
         _visited = new bool[NumDots];
+        _prevDots = new Stack<Dot>();
+        _formedSquareDots = new Stack<Dot>();
         
         #if UNITY_EDITOR
             Random.InitState(_seed);
@@ -57,17 +61,9 @@ public class DotsBoard : Singleton<DotsBoard>
         }
     }
 
-    public void ClearEdges()
+    public void ResetBoard()
     {
-        _edges.Clear();
-    }
-
-    public void UnvisitAllDots()
-    {
-        for (int i = 0; i < NumDots; i++)
-        {
-            _visited[i] = false;
-        }
+        ClearEdges();
     }
     
     public void AddEdge(Dot src, Dot dst)
@@ -75,25 +71,29 @@ public class DotsBoard : Singleton<DotsBoard>
         int srcIndex = GetIndex(src);
         int dstIndex = GetIndex(dst);
 
-        List<int> dstsFromSrc;
-        if (_edges.TryGetValue(srcIndex, out List<int> dsts))
-            dstsFromSrc = dsts;
-        else
-            dstsFromSrc = new List<int>();
+        _edges[srcIndex, dstIndex] = true;
+        _edges[dstIndex, srcIndex] = true;
 
-        dstsFromSrc.Add(dstIndex);
-        _edges[srcIndex] = dstsFromSrc;
+        _prevDots.Push(src);
+
+        if (CountEdgesAt(dst) > 1)
+            _formedSquareDots.Push(dst);
     }
 
     public void RemoveEdge(Dot src, Dot dst)
     {
         int srcIndex = GetIndex(src);
         int dstIndex = GetIndex(dst);
+
+        _edges[srcIndex, dstIndex] = false;
+        _edges[dstIndex, srcIndex] = false;
         
-        if (_edges.TryGetValue(srcIndex, out List<int> dsts))
+        _prevDots.Pop();
+
+        if (IsSquareFormed())
         {
-            dsts.Remove(dstIndex);
-            _edges[srcIndex] = dsts;
+            if (CountEdgesAt(src) <= 1)
+                _formedSquareDots.Pop();
         }
     }
 
@@ -102,20 +102,26 @@ public class DotsBoard : Singleton<DotsBoard>
         int srcIndex = GetIndex(src);
         int dstIndex = GetIndex(dst);
 
-        if (_edges.TryGetValue(srcIndex, out List<int> dsts))
-            return dsts.Contains(dstIndex);
-
-        return false;
+        return _edges[srcIndex, dstIndex] && _edges[dstIndex, srcIndex];
     }
 
     public int CountEdgesAt(Dot src)
     {
-        int srcIndex = GetIndex(src);
+        int numEdges = 0;
 
-        if (_edges.TryGetValue(srcIndex, out List<int> dsts))
-            return dsts.Count;
+        List<Dot> dotsAroundSrc = GetSameColoredDotsAround(src);
+        foreach (Dot dst in dotsAroundSrc)
+        {
+            if (ContainsEdge(src, dst))
+                numEdges++;
+        }
 
-        return 0;
+        return numEdges;
+    }
+
+    public bool IsDotPreviousSource(Dot dot)
+    {
+        return dot == _prevDots.Peek();
     }
 
     public List<Dot> GetSameColoredDotsAround(Dot dot)
@@ -157,36 +163,6 @@ public class DotsBoard : Singleton<DotsBoard>
         return neighbors;
     }
 
-    public List<Dot> GetDotsOnLine(Dot src)
-    {
-        List<Dot> dots = new List<Dot>();
-        
-        Stack<Dot> s = new Stack<Dot>();
-        s.Push(src);
-
-        string message = string.Empty;
-
-        while (s.Count > 0)
-        {
-            Dot cur = s.Pop();
-            dots.Add(cur);
-            
-            int curIndex = GetIndex(cur);
-            _visited[curIndex] = true;
-
-            foreach (Dot dst in cur.PreviousDots)
-            {
-                int dstIndex = GetIndex(dst);
-                if (_visited[dstIndex])
-                    continue;
-
-                s.Push(dst);
-            }
-        }
-
-        return dots;
-    }
-
     public List<Dot> GetDotsWithColor(Color color)
     {
         List<Dot> dots = new List<Dot>();
@@ -203,7 +179,44 @@ public class DotsBoard : Singleton<DotsBoard>
 
         return dots;
     }
-    
+
+    public List<Dot> GetDotsInLineFrom(Dot src)
+    {
+        List<Dot> dots = new List<Dot>();
+        
+        Stack<Dot> stack = new Stack<Dot>();
+        stack.Push(src);
+
+        while (stack.Count > 0)
+        {
+            Dot cur = stack.Pop();
+            dots.Add(cur);
+            
+            int curIndex = GetIndex(cur);
+            _visited[curIndex] = true;
+
+            List<Dot> dsts = GetSameColoredDotsAround(cur);
+            foreach (Dot dst in dsts)
+            {
+                if (!ContainsEdge(cur, dst))
+                    continue;
+                
+                int dstIndex = GetIndex(dst);
+                if (_visited[dstIndex])
+                    continue;
+                
+                stack.Push(dst);
+            }
+        }
+        
+        UnvisitAllDots();
+        
+        if (dots.Count <= 1)
+            dots.Clear();
+        
+        return dots;
+    }
+
     private int GetIndex(Dot dot)
     {
         return dot.Col * _boardWidth + dot.Row;
@@ -213,5 +226,24 @@ public class DotsBoard : Singleton<DotsBoard>
     {
         Color color = _dotColors[Random.Range(0, _dotColors.Length)];
         return color;
+    }
+    
+    private void ClearEdges()
+    {
+        _prevDots.Clear();
+        _formedSquareDots.Clear();
+        for (int i = 0; i < NumDots * NumDots; i++)
+        {
+            for (int j = 0; j < NumDots * NumDots; j++)
+                _edges[i, j] = false;
+        }
+    }
+
+    private void UnvisitAllDots()
+    {
+        for (int i = 0; i < NumDots; i++)
+        {
+            _visited[i] = false;
+        }
     }
 }
