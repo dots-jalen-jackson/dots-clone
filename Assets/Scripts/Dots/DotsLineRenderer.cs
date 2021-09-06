@@ -20,6 +20,12 @@ public class DotsLineRenderer : Singleton<DotsLineRenderer>
         _lineRenderer = GetComponent<LineRenderer>();
         _lineRenderer.positionCount = 1;
     }
+    
+    public void SetLineColor(Color color)
+    {
+        _lineRenderer.startColor = color;
+        _lineRenderer.endColor = color;
+    }
 
     public void ClearLine()
     {
