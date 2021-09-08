@@ -96,6 +96,7 @@ public class Dot : EventTrigger
             return;
         
         //TODO Remove dots in list
+        DotsBoard.Instance.RemoveDots(dotsToRemove);
     }
 
     private bool IsAround(Dot dot)

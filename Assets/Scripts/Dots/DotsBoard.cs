@@ -1,6 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Numerics;
+using System.Runtime.CompilerServices;
+using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.UI;
+using Random = UnityEngine.Random;
 using Vector2 = UnityEngine.Vector2;
 
 [DefaultExecutionOrder(0)]
@@ -22,7 +28,9 @@ public class DotsBoard : Singleton<DotsBoard>
 
     private int _dotSize;
 
-    private int NumDots => _dotsPooler.ObjectPoolSize;
+    private int _numDots => _dotsPooler.ObjectPoolSize;
+
+    private int _dotSpacing => _dotSize * 2;
 
     public bool IsSquareFormed() => _formedSquareDots.Count > 0;
 
@@ -57,8 +65,8 @@ public class DotsBoard : Singleton<DotsBoard>
     private void PopulateDots()
     {
         _dots = new Dot[_boardWidth, _boardHeight];
-        _edges = new bool[NumDots * NumDots, NumDots * NumDots];
-        _visited = new bool[NumDots];
+        _edges = new bool[_numDots * _numDots, _numDots * _numDots];
+        _visited = new bool[_numDots];
         _prevDots = new Stack<Dot>();
         _formedSquareDots = new Stack<Dot>();
         
@@ -70,11 +78,7 @@ public class DotsBoard : Singleton<DotsBoard>
         {
             for (int j = 0; j < _boardHeight; j++)
             {
-                _dots[i, j] = _dotsPooler.GetPooledObject().GetComponent<Dot>();
-                _dots[i, j].Color = GenerateRandomColor();
-                _dots[i, j].Position = new Vector2(GetXAt(i), GetYAt(j));
-                _dots[i, j].name = $"Dot {_dots[i, j].Row}, {_dots[i, j].Col}";
-                _dots[i, j].gameObject.SetActive(true);
+                GenerateDot(i, j);
             }
         }
     }
@@ -86,16 +90,14 @@ public class DotsBoard : Singleton<DotsBoard>
 
     public int GetRowAtPosition(Vector2 position)
     {
-        float spacing = _dotSize * 2;
         float y = position.y;
-        return ((int) (spacing - y) / NumDots);
+        return ((int) (_dotSpacing - y) / _numDots);
     }
 
     public int GetColAtPosition(Vector2 position)
     {
-        float spacing = _dotSize * 2;
         float x = position.x;
-        return ((int) (x + spacing) / NumDots);
+        return ((int) (x + _dotSpacing) / _numDots);
     }
     
     public void AddEdge(Dot src, Dot dst)
@@ -163,33 +165,45 @@ public class DotsBoard : Singleton<DotsBoard>
         if (dot.Row - 1 >= 0)
         {
             Dot upDot = _dots[dot.Col, dot.Row - 1];
-            
-            if (upDot.Color == dot.Color)
-                neighbors.Add(upDot);
+
+            if (upDot != null)
+            {
+                if (upDot.Color == dot.Color)
+                    neighbors.Add(upDot);
+            }
         }
         
         if (dot.Row + 1 < _boardHeight)
         {
             Dot downDot = _dots[dot.Col, dot.Row + 1];
-            
-            if (downDot.Color == dot.Color)
-                neighbors.Add(downDot);
+
+            if (downDot != null)
+            {
+                if (downDot.Color == dot.Color)
+                    neighbors.Add(downDot);
+            }
         }
 
         if (dot.Col - 1 >= 0)
         {
             Dot leftDot = _dots[dot.Col - 1, dot.Row];
-            
-            if (leftDot.Color == dot.Color)
-                neighbors.Add(leftDot);
+
+            if (leftDot != null)
+            {
+                if (leftDot.Color == dot.Color)
+                    neighbors.Add(leftDot);
+            }
         }
         
         if (dot.Col + 1 < _boardWidth)
         {
             Dot rightDot = _dots[dot.Col + 1, dot.Row];
-            
-            if (rightDot.Color == dot.Color)
-                neighbors.Add(rightDot);
+
+            if (rightDot != null)
+            {
+                if (rightDot.Color == dot.Color)
+                    neighbors.Add(rightDot);
+            }
         }
 
         return neighbors;
@@ -204,6 +218,10 @@ public class DotsBoard : Singleton<DotsBoard>
             for (int j = 0; j < _boardHeight; j++)
             {
                 Dot dot = _dots[i, j];
+
+                if (dot == null)
+                    continue;
+                
                 if (dot.Color == color)
                     dots.Add(dot);
             }
@@ -249,6 +267,24 @@ public class DotsBoard : Singleton<DotsBoard>
         return dots;
     }
 
+    public void RemoveDots(List<Dot> dots)
+    {
+        HashSet<int> cols = new HashSet<int>();
+        dots.ForEach((dot) =>
+        {
+            int row = dot.Row;
+            int col = dot.Col;
+            
+            _dotsPooler.ReturnPooledObject(dot.gameObject);
+            _dots[col, row] = null;
+
+            cols.Add(col);
+        });
+
+        foreach (int col in cols)
+            DropDotsDown(col);
+    }
+
     private int GetIndex(Dot dot)
     {
         return dot.Col * _boardWidth + dot.Row;
@@ -256,14 +292,12 @@ public class DotsBoard : Singleton<DotsBoard>
 
     private float GetXAt(int col)
     {
-        float spacing = _dotSize * 2;
-        return (spacing * col) - spacing;
+        return (_dotSpacing * col) - _dotSpacing;
     }
 
     private float GetYAt(int row)
     {
-        float spacing = _dotSize * 2;
-        return spacing - (spacing * row);
+        return _dotSpacing - (_dotSpacing * row);
     }
 
     private Color GenerateRandomColor()
@@ -272,20 +306,100 @@ public class DotsBoard : Singleton<DotsBoard>
         return color;
     }
     
+    private void GenerateDot(int col, int row)
+    {
+        if (row < 0 || row >= _boardHeight || col < 0 || col >= _boardWidth)
+            return;
+
+        GameObject dotObject = _dotsPooler.GetPooledObject();
+        if (dotObject == null)
+            return;
+        
+        _dots[col, row] = dotObject.GetComponent<Dot>();
+        _dots[col, row].Color = GenerateRandomColor();
+        _dots[col, row].Position = new Vector2(GetXAt(col), GetYAt(row));
+        _dots[col, row].gameObject.SetActive(true);
+    }
+    
+    //TODO Generate dots after dropping them
+    private void DropDotsDown(int col)
+    {
+        int startRow = _boardHeight - 1;
+
+        int currentRow = startRow;
+        while (currentRow >= 0 && _dots[col, currentRow] != null)
+            currentRow--;
+
+        int dotShiftCount = 0;
+        while (currentRow >= 0 && _dots[col, currentRow] == null)
+        {
+            currentRow--;
+            dotShiftCount++;
+        }
+
+        do
+        {
+            while (currentRow >= 0 && _dots[col, currentRow] != null)
+            {
+                Dot movedDot = _dots[col, currentRow];
+                float movedY = movedDot.Position.y - (_dotSpacing * dotShiftCount);
+                if (movedY < GetYAt(_boardHeight - 1))
+                    movedY = GetYAt(_boardHeight - 1);
+
+                movedDot.Position = new Vector2(movedDot.Position.x, movedY);
+
+                _dots[col, movedDot.Row] = _dots[col, currentRow];
+                _dots[col, currentRow] = null;
+
+                currentRow--;
+            }
+
+            while (currentRow >= 0 && _dots[col, currentRow] == null)
+            {
+                currentRow--;
+                dotShiftCount++;
+            }
+            
+        } while (currentRow >= 0);
+
+        currentRow = 0;
+        while (currentRow < _boardHeight && _dots[col, currentRow] == null)
+        {
+            GenerateDot(col, currentRow);
+            currentRow++;
+        }
+    }
+
+    private int GetNumMissingDotsInCol(int col)
+    {
+        int count = 0;
+
+        for (int row = 0; row < _boardHeight; row++)
+        {
+            Dot dot = _dots[col, row];
+            if (dot != null)
+                continue;
+
+            count++;
+        }
+
+        return count;
+    }
+    
     private void ClearEdges()
     {
         _prevDots.Clear();
         _formedSquareDots.Clear();
-        for (int i = 0; i < NumDots * NumDots; i++)
+        for (int i = 0; i < _numDots * _numDots; i++)
         {
-            for (int j = 0; j < NumDots * NumDots; j++)
+            for (int j = 0; j < _numDots * _numDots; j++)
                 _edges[i, j] = false;
         }
     }
 
     private void UnvisitAllDots()
     {
-        for (int i = 0; i < NumDots; i++)
+        for (int i = 0; i < _numDots; i++)
         {
             _visited[i] = false;
         }
