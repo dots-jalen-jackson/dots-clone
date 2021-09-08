@@ -4,6 +4,7 @@ using System.Net;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
+using UnityEditor.U2D;
 using UnityEngine;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
@@ -15,7 +16,6 @@ public class DotsBoard : Singleton<DotsBoard>
     [SerializeField] private int _boardWidth = 6;
     [SerializeField] private int _boardHeight = 6;
     [SerializeField] private Color[] _dotColors;
-    [SerializeField] private int _seed;
 
     private RectTransform _rectTransform;
     
@@ -25,6 +25,9 @@ public class DotsBoard : Singleton<DotsBoard>
     private Stack<Dot> _formedSquareDots;
     private bool[,] _edges;
     private bool[] _visited;
+
+    private Dictionary<Color, int> _dotColorsSpawnedCounts;
+    private int _totalDotsCountSpawned;
 
     private int _dotSize;
 
@@ -69,16 +72,14 @@ public class DotsBoard : Singleton<DotsBoard>
         _visited = new bool[_numDots];
         _prevDots = new Stack<Dot>();
         _formedSquareDots = new Stack<Dot>();
-        
-        #if UNITY_EDITOR
-            Random.InitState(_seed);
-        #endif
+        _dotColorsSpawnedCounts = new Dictionary<Color, int>();
+        _totalDotsCountSpawned = 0;
 
         for (int i = 0; i < _boardWidth; i++)
         {
             for (int j = 0; j < _boardHeight; j++)
             {
-                GenerateDot(i, j);
+                GenerateDot(i, j, GenerateRandomColor);
             }
         }
     }
@@ -306,7 +307,7 @@ public class DotsBoard : Singleton<DotsBoard>
         return color;
     }
     
-    private void GenerateDot(int col, int row)
+    private void GenerateDot(int col, int row, Func<Color> randomColorGenerator)
     {
         if (row < 0 || row >= _boardHeight || col < 0 || col >= _boardWidth)
             return;
@@ -316,12 +317,21 @@ public class DotsBoard : Singleton<DotsBoard>
             return;
         
         _dots[col, row] = dotObject.GetComponent<Dot>();
-        _dots[col, row].Color = GenerateRandomColor();
         _dots[col, row].Position = new Vector2(GetXAt(col), GetYAt(row));
+        _dots[col, row].Color = randomColorGenerator.Invoke();
         _dots[col, row].gameObject.SetActive(true);
+
+        Color dotColor = _dots[col, row].Color;
+
+        if (_dotColorsSpawnedCounts.ContainsKey(dotColor))
+            _dotColorsSpawnedCounts[dotColor]++;
+        else
+            _dotColorsSpawnedCounts[dotColor] = 0;
+        
+        
+        _totalDotsCountSpawned++;
     }
     
-    //TODO Generate dots after dropping them
     private void DropDotsDown(int col)
     {
         int startRow = _boardHeight - 1;
@@ -365,25 +375,26 @@ public class DotsBoard : Singleton<DotsBoard>
         currentRow = 0;
         while (currentRow < _boardHeight && _dots[col, currentRow] == null)
         {
-            GenerateDot(col, currentRow);
+            GenerateDot(col, currentRow, GenerateRandomColorBasedOffDotSpawnCounts);
             currentRow++;
         }
     }
 
-    private int GetNumMissingDotsInCol(int col)
+    private Color GenerateRandomColorBasedOffDotSpawnCounts()
     {
-        int count = 0;
-
-        for (int row = 0; row < _boardHeight; row++)
+        Color color = GenerateRandomColor();
+        
+        foreach (Color dotColor in _dotColors)
         {
-            Dot dot = _dots[col, row];
-            if (dot != null)
-                continue;
+            int numDotsWithColorSpawned = _dotColorsSpawnedCounts[dotColor];
+            float percentageDotsWithColorSpawned = (float)numDotsWithColorSpawned / _totalDotsCountSpawned;
 
-            count++;
+            if (Random.Range(0.0f, 1.0f) < percentageDotsWithColorSpawned)
+                color = dotColor;
         }
 
-        return count;
+
+        return color;
     }
     
     private void ClearEdges()
