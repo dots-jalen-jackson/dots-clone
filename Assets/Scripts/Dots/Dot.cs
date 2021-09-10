@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -54,7 +55,7 @@ public class Dot : EventTrigger
         
         Dot lastDotPointed = eventData.pointerDrag.GetComponent<Dot>();
         
-        bool isLastDotNeighbor = this.IsAround(lastDotPointed);
+        bool isLastDotNeighbor = this.IsAroundSameColoredDot(lastDotPointed);
         if (!isLastDotNeighbor) 
             return;
         
@@ -82,11 +83,17 @@ public class Dot : EventTrigger
         List<Dot> dotsToRemove;
         if (!DotsBoard.Instance.IsSquareFormed())
         {
-            dotsToRemove = DotsBoard.Instance.GetDotsInLineFrom(this);
+            dotsToRemove = DotsBoard.Instance.GetDotsOnLineFrom(this);
         }
         else
         {
             dotsToRemove = DotsBoard.Instance.GetDotsWithColor(Color);
+
+            List<Dot> square = DotsBoard.Instance.GetDotsOnLineFrom(this).Distinct().ToList();
+            List<Dot> dotsInSquare = DotsBoard.Instance.GetDotsInSquare(square);
+
+            dotsToRemove.AddRange(dotsInSquare);
+            dotsToRemove = dotsToRemove.Distinct().ToList();
         }
         
         DotsBoard.Instance.ResetBoard();
@@ -99,7 +106,7 @@ public class Dot : EventTrigger
         DotsBoard.Instance.RemoveDots(dotsToRemove);
     }
 
-    private bool IsAround(Dot dot)
+    private bool IsAroundSameColoredDot(Dot dot)
     {
         List<Dot> surroundingDots = DotsBoard.Instance.GetSameColoredDotsAround(dot);
         return surroundingDots.Contains(this);

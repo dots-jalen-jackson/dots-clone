@@ -144,7 +144,7 @@ public class DotsBoard : Singleton<DotsBoard>
     {
         int numEdges = 0;
 
-        List<Dot> dotsAroundSrc = GetSameColoredDotsAround(src);
+        List<Dot> dotsAroundSrc = GetDotsAround(src);
         foreach (Dot dst in dotsAroundSrc)
         {
             if (ContainsEdge(src, dst))
@@ -161,53 +161,10 @@ public class DotsBoard : Singleton<DotsBoard>
 
     public List<Dot> GetSameColoredDotsAround(Dot dot)
     {
-        List<Dot> neighbors = new List<Dot>();
-        
-        if (dot.Row - 1 >= 0)
-        {
-            Dot upDot = _dots[dot.Col, dot.Row - 1];
+        List<Dot> dots = GetDotsAround(dot);
+        dots.RemoveAll(((d) => d.Color != dot.Color));
 
-            if (upDot != null)
-            {
-                if (upDot.Color == dot.Color)
-                    neighbors.Add(upDot);
-            }
-        }
-        
-        if (dot.Row + 1 < _boardHeight)
-        {
-            Dot downDot = _dots[dot.Col, dot.Row + 1];
-
-            if (downDot != null)
-            {
-                if (downDot.Color == dot.Color)
-                    neighbors.Add(downDot);
-            }
-        }
-
-        if (dot.Col - 1 >= 0)
-        {
-            Dot leftDot = _dots[dot.Col - 1, dot.Row];
-
-            if (leftDot != null)
-            {
-                if (leftDot.Color == dot.Color)
-                    neighbors.Add(leftDot);
-            }
-        }
-        
-        if (dot.Col + 1 < _boardWidth)
-        {
-            Dot rightDot = _dots[dot.Col + 1, dot.Row];
-
-            if (rightDot != null)
-            {
-                if (rightDot.Color == dot.Color)
-                    neighbors.Add(rightDot);
-            }
-        }
-
-        return neighbors;
+        return dots;
     }
 
     public List<Dot> GetDotsWithColor(Color color)
@@ -231,7 +188,7 @@ public class DotsBoard : Singleton<DotsBoard>
         return dots;
     }
 
-    public List<Dot> GetDotsInLineFrom(Dot src)
+    public List<Dot> GetDotsOnLineFrom(Dot src)
     {
         List<Dot> dots = new List<Dot>();
         
@@ -268,6 +225,39 @@ public class DotsBoard : Singleton<DotsBoard>
         return dots;
     }
 
+    public List<Dot> GetDotsInSquare(List<Dot> square)
+    {
+        List<Dot> dotsInSquare = new List<Dot>();
+        List<Dot> cornersOnSquare = GetCornerDots(square);
+
+        int minRow = Int32.MaxValue;
+        int minCol = Int32.MaxValue;
+        int maxRow = Int32.MinValue;
+        int maxCol = Int32.MinValue;
+        
+        foreach (Dot corner in cornersOnSquare)
+        {
+            minRow = Mathf.Min(minRow, corner.Row);
+            maxRow = Mathf.Max(maxRow, corner.Row);
+            minCol = Mathf.Min(minCol, corner.Col);
+            maxCol = Mathf.Max(maxCol, corner.Col);
+        }
+
+        for (int col = 0; col < _boardWidth; col++)
+        {
+            for (int row = 0; row < _boardHeight; row++)
+            {
+                if (row <= minRow || row >= maxRow || col <= minCol || col >= maxCol)
+                    continue;
+
+                Dot dot = _dots[col, row];
+                dotsInSquare.Add(dot);
+            }
+        }
+
+        return dotsInSquare;
+    }
+    
     public void RemoveDots(List<Dot> dots)
     {
         HashSet<int> cols = new HashSet<int>();
@@ -291,6 +281,14 @@ public class DotsBoard : Singleton<DotsBoard>
         return dot.Col * _boardWidth + dot.Row;
     }
 
+    private Dot GetDotAtIndex(int index)
+    {
+        int col = index / _boardWidth;
+        int row = index % _boardWidth;
+
+        return _dots[col, row];
+    }
+
     private float GetXAt(int col)
     {
         return (_dotSpacing * col) - _dotSpacing;
@@ -305,6 +303,11 @@ public class DotsBoard : Singleton<DotsBoard>
     {
         Color color = _dotColors[Random.Range(0, _dotColors.Length)];
         return color;
+    }
+
+    private Color GenerateFirstColor()
+    {
+        return _dotColors[0];
     }
     
     private void GenerateDot(int col, int row, Func<Color> randomColorGenerator)
@@ -389,12 +392,106 @@ public class DotsBoard : Singleton<DotsBoard>
             int numDotsWithColorSpawned = _dotColorsSpawnedCounts[dotColor];
             float percentageDotsWithColorSpawned = (float)numDotsWithColorSpawned / _totalDotsCountSpawned;
 
-            if (Random.Range(0.0f, 1.0f) < percentageDotsWithColorSpawned)
+            if (Random.Range(0.0f, 1.0f) < 1.0f - percentageDotsWithColorSpawned)
                 color = dotColor;
         }
 
 
         return color;
+    }
+    
+    private bool IsDotCorner(Dot src)
+    {
+        if (CountEdgesAt(src) < 2)
+            return false;
+
+        int srcIndex = GetIndex(src);
+        int leftSrcIndex = srcIndex - 1;
+        int rightSrcIndex = srcIndex + 1;
+        int upSrcIndex = srcIndex - _boardWidth;
+        int downSrcIndex = srcIndex + _boardWidth;
+
+        bool isTopLeftCorner = false;
+        bool isTopRightCorner = false;
+        bool isBotLeftCorner = false;
+        bool isBotRightCorner = false;
+        
+        bool isLeftSrcIndexInBounds = leftSrcIndex >= 0;
+        bool isRightSrcIndexInBounds = rightSrcIndex < _numDots * _numDots;
+        bool isUpSrcIndexInBounds = upSrcIndex >= 0;
+        bool isDownSrcIndexInBounds = downSrcIndex < _numDots * _numDots;
+
+        if (isDownSrcIndexInBounds)
+        {
+            if (isLeftSrcIndexInBounds)
+                isTopRightCorner = _edges[srcIndex, downSrcIndex] && _edges[srcIndex, leftSrcIndex];
+            
+            if (isRightSrcIndexInBounds)
+                isTopLeftCorner = _edges[srcIndex, downSrcIndex] && _edges[srcIndex, rightSrcIndex];
+        }
+
+        if (isUpSrcIndexInBounds)
+        {
+            if (isLeftSrcIndexInBounds)
+                isBotRightCorner = _edges[srcIndex, upSrcIndex] && _edges[srcIndex, leftSrcIndex];
+            
+            if (isRightSrcIndexInBounds)
+                isBotLeftCorner = _edges[srcIndex, upSrcIndex] && _edges[srcIndex, rightSrcIndex];
+        }
+
+        return isTopLeftCorner || isTopRightCorner || isBotLeftCorner || isBotRightCorner;
+    }
+    
+    private List<Dot> GetDotsAround(Dot dot)
+    {
+        List<Dot> neighbors = new List<Dot>();
+        
+        if (dot.Row - 1 >= 0)
+        {
+            Dot upDot = _dots[dot.Col, dot.Row - 1];
+
+            if (upDot != null)
+                neighbors.Add(upDot);
+        }
+        
+        if (dot.Row + 1 < _boardHeight)
+        {
+            Dot downDot = _dots[dot.Col, dot.Row + 1];
+
+            if (downDot != null)
+                neighbors.Add(downDot);
+        }
+
+        if (dot.Col - 1 >= 0)
+        {
+            Dot leftDot = _dots[dot.Col - 1, dot.Row];
+
+            if (leftDot != null)
+                neighbors.Add(leftDot);
+        }
+        
+        if (dot.Col + 1 < _boardWidth)
+        {
+            Dot rightDot = _dots[dot.Col + 1, dot.Row];
+
+            if (rightDot != null)
+                neighbors.Add(rightDot);
+        }
+
+        return neighbors;
+    }
+    
+    private List<Dot> GetCornerDots(List<Dot> square)
+    {
+        List<Dot> cornerDots = new List<Dot>();
+
+        foreach (Dot dot in square)
+        {
+            if (IsDotCorner(dot))
+                cornerDots.Add(dot);
+        }
+
+        return cornerDots;
     }
     
     private void ClearEdges()
