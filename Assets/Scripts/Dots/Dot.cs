@@ -1,16 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Vector2 = UnityEngine.Vector2;
 
-public class Dot : EventTrigger
+public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerEnterHandler
 {
-    private RectTransform _rectTransform;
+    [SerializeField]
     private Image _image;
+    
+    private RectTransform _rectTransform;
 
     public int Row => DotsBoard.Instance.GetRowAtPosition(Position);
     public int Col => DotsBoard.Instance.GetColAtPosition(Position);
@@ -27,19 +27,20 @@ public class Dot : EventTrigger
         set => _rectTransform.anchoredPosition = value;
     }
 
+    public float Size => _image.GetComponent<RectTransform>().rect.width;
+
     public void Awake()
     {
         _rectTransform = GetComponent<RectTransform>();
-        _image = GetComponent<Image>();
     }
 
-    public override void OnBeginDrag(PointerEventData eventData)
+    public virtual void OnBeginDrag(PointerEventData eventData)
     {
         DotsLineRenderer.Instance.AddDotToLine(this);
         DotsLineRenderer.Instance.SetLineColor(Color);
     }
 
-    public override void OnDrag(PointerEventData eventData)
+    public virtual void OnDrag(PointerEventData eventData)
     {
         if (eventData.pointerEnter != gameObject)
             DotsLineRenderer.Instance.SetCurrentPosition(eventData.position);
@@ -48,7 +49,7 @@ public class Dot : EventTrigger
         
     }
 
-    public override void OnPointerEnter(PointerEventData eventData)
+    public virtual void OnPointerEnter(PointerEventData eventData)
     {
         if (!eventData.dragging)
             return;
@@ -78,7 +79,7 @@ public class Dot : EventTrigger
         eventData.pointerDrag = gameObject;
     }
 
-    public override void OnEndDrag(PointerEventData eventData)
+    public virtual void OnEndDrag(PointerEventData eventData)
     {
         List<Dot> dotsToRemove;
         if (!DotsBoard.Instance.IsSquareFormed())

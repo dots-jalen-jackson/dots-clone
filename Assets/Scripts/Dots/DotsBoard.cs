@@ -1,12 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net;
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using JetBrains.Annotations;
-using UnityEditor.U2D;
 using UnityEngine;
-using UnityEngine.UI;
 using Random = UnityEngine.Random;
 using Vector2 = UnityEngine.Vector2;
 
@@ -45,9 +39,9 @@ public class DotsBoard : Singleton<DotsBoard>
         _dotsPooler.ObjectPoolSize = _boardWidth * _boardHeight;
         _dotsPooler.GenerateObjects();
 
-        GameObject dot = _dotsPooler.ObjectPrefab;
-        RectTransform dotTransform = dot.GetComponent<RectTransform>();
-        _dotSize = (int) dotTransform.rect.width;
+        GameObject dotObject = _dotsPooler.ObjectPrefab;
+        Dot dot = dotObject.GetComponent<Dot>();
+        _dotSize = (int) dot.Size;
     }
 
     private void Start()
