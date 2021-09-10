@@ -80,6 +80,7 @@ public class DotsBoard : Singleton<DotsBoard>
 
     public void ResetBoard()
     {
+        UnvisitAllDots();
         ClearEdges();
     }
 
@@ -211,8 +212,6 @@ public class DotsBoard : Singleton<DotsBoard>
             }
         }
         
-        UnvisitAllDots();
-        
         if (dots.Count <= 1)
             dots.Clear();
         
@@ -245,6 +244,11 @@ public class DotsBoard : Singleton<DotsBoard>
                     continue;
 
                 Dot dot = _dots[col, row];
+                int dotIndex = GetIndex(dot);
+                if (_visited[dotIndex])
+                    continue;
+
+                _visited[dotIndex] = true;
                 dotsInSquare.Add(dot);
             }
         }

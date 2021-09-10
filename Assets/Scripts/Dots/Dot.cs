@@ -104,7 +104,7 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
         {
             dotsToRemove = DotsBoard.Instance.GetDotsWithColor(Color);
 
-            List<Dot> square = DotsBoard.Instance.GetDotsOnLineFrom(this).Distinct().ToList();
+            List<Dot> square = DotsBoard.Instance.GetDotsOnLineFrom(this);
             List<Dot> dotsInSquare = DotsBoard.Instance.GetDotsInSquare(square);
 
             dotsToRemove.AddRange(dotsInSquare);
