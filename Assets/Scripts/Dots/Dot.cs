@@ -1,24 +1,30 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Vector2 = UnityEngine.Vector2;
 
-public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerEnterHandler
+public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerEnterHandler, IPointerDownHandler
 {
     [SerializeField]
-    private Image _image;
+    private Image _dotImage;
+
+    [SerializeField] 
+    private Image _dotSelectedImage;
     
     private RectTransform _rectTransform;
+
+    private float ColliderSize => _rectTransform.rect.width;
 
     public int Row => DotsBoard.Instance.GetRowAtPosition(Position);
     public int Col => DotsBoard.Instance.GetColAtPosition(Position);
 
     public Color Color
     {
-        get => _image.color;
-        set => _image.color = value;
+        get => _dotImage.color;
+        set => _dotImage.color = value;
     }
 
     public Vector2 Position
@@ -27,11 +33,16 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
         set => _rectTransform.anchoredPosition = value;
     }
 
-    public float Size => _image.GetComponent<RectTransform>().rect.width;
+    public float Size => _dotImage.GetComponent<RectTransform>().rect.width;
 
     public void Awake()
     {
         _rectTransform = GetComponent<RectTransform>();
+    }
+
+    public virtual void OnPointerDown(PointerEventData eventData)
+    {
+        StartCoroutine(OnDotSelected());
     }
 
     public virtual void OnBeginDrag(PointerEventData eventData)
@@ -77,6 +88,9 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
         }
         
         eventData.pointerDrag = gameObject;
+        
+        StopAllCoroutines();
+        StartCoroutine(OnDotSelected());
     }
 
     public virtual void OnEndDrag(PointerEventData eventData)
@@ -96,6 +110,12 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
             dotsToRemove.AddRange(dotsInSquare);
             dotsToRemove = dotsToRemove.Distinct().ToList();
         }
+
+        foreach (Dot dot in dotsToRemove)
+        {
+            dot.StopAllCoroutines();
+            dot.ResetSelectedImage();
+        }
         
         DotsBoard.Instance.ResetBoard();
         DotsLineRenderer.Instance.ClearLine();
@@ -103,8 +123,35 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
         if (dotsToRemove.Count <= 0)
             return;
         
-        //TODO Remove dots in list
         DotsBoard.Instance.RemoveDots(dotsToRemove);
+    }
+
+    private void ResetSelectedImage()
+    {
+        _dotSelectedImage.color = new Color(Color.r, Color.g, Color.b, 0.0f);
+        _dotSelectedImage.rectTransform.localScale = Vector3.one;
+    }
+
+    private IEnumerator OnDotSelected()
+    {
+        Color dotSelectedStartColor = new Color(Color.r, Color.g, Color.b, 1.0f);
+        Vector3 dotSelectedStartScale = Vector3.one;
+
+        float scaleSpeed = ColliderSize / Size;
+        float scaleMultiplier = scaleSpeed + 1;
+        
+        Color dotSelectedEndColor = new Color(Color.r, Color.g, Color.b, 0.0f);
+        Vector3 dotSelectedEndScale = dotSelectedStartScale * scaleMultiplier;
+
+        float t = 0.0f;
+        while (t < 1.0f)
+        {
+            _dotSelectedImage.color = Color.Lerp(dotSelectedStartColor, dotSelectedEndColor, t);
+            _dotSelectedImage.rectTransform.localScale = Vector3.Lerp(dotSelectedStartScale, dotSelectedEndScale, t);
+
+            t += Time.deltaTime * scaleSpeed;
+            yield return null;
+        }
     }
 
     private bool IsAroundSameColoredDot(Dot dot)
