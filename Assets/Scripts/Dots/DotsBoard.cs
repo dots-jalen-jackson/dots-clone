@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using Unity.Rendering.HybridV2;
 using UnityEngine;
 using Random = UnityEngine.Random;
 using Vector2 = UnityEngine.Vector2;
@@ -79,12 +81,6 @@ public class DotsBoard : Singleton<DotsBoard>
         }
     }
 
-    public void ResetBoard()
-    {
-        UnvisitAllDots();
-        ClearEdges();
-    }
-
     public int GetRowAtPosition(Vector2 position)
     {
         float y = position.y;
@@ -135,24 +131,41 @@ public class DotsBoard : Singleton<DotsBoard>
 
         return _edges[srcIndex, dstIndex] && _edges[dstIndex, srcIndex];
     }
-
-    public int CountEdgesAt(Dot src)
-    {
-        int numEdges = 0;
-
-        List<Dot> dotsAroundSrc = GetDotsAround(src);
-        foreach (Dot dst in dotsAroundSrc)
-        {
-            if (ContainsEdge(src, dst))
-                numEdges++;
-        }
-
-        return numEdges;
-    }
-
     public bool IsDotPreviousSource(Dot dot)
     {
         return dot == _prevDots.Peek();
+    }
+
+    public void RemoveDot(Dot src)
+    {
+        src.Shrink(() =>
+        {
+            int row = src.Row;
+            int col = src.Col;
+            
+            _dotsPooler.ReturnPooledObject(src.gameObject);
+            _dots[col, row] = null;
+
+            DropDotsDown(col);
+        });
+    }
+    
+    public void RemoveDots(Dot src)
+    {
+        List<Dot> dotsToRemove = GetDotsToRemove(src);
+        if (dotsToRemove.Count <= 0)
+            return;
+        
+        ClearEdges();
+        
+        foreach (Dot dot in dotsToRemove)
+        {
+            dot.StopAllCoroutines();
+            dot.Reset();
+        }
+        
+        IEnumerator shrinkDots = ShrinkDots(dotsToRemove, DropAllDotsDown);
+        StartCoroutine(shrinkDots);
     }
 
     public List<Dot> GetSameColoredDotsAround(Dot dot)
@@ -163,7 +176,20 @@ public class DotsBoard : Singleton<DotsBoard>
         return dots;
     }
 
-    public List<Dot> GetDotsWithColor(Color color)
+    public List<Dot> GetDotsToRemove(Dot src)
+    {
+        List<Dot> line = GetDotsOnLineFrom(src);
+        if (!IsSquareFormed())
+            return line;
+
+        List<Dot> dotsWithSrcColor = GetDotsWithColor(src.Color);
+        List<Dot> dotsInSquare = GetDotsInSquare(line);
+
+        List<Dot> dotsToRemove = dotsWithSrcColor.Union<Dot>(dotsInSquare).Distinct().ToList();
+        return dotsToRemove;
+    }
+
+    private List<Dot> GetDotsWithColor(Color color)
     {
         List<Dot> dots = new List<Dot>();
         
@@ -184,7 +210,7 @@ public class DotsBoard : Singleton<DotsBoard>
         return dots;
     }
 
-    public List<Dot> GetDotsOnLineFrom(Dot src)
+    private List<Dot> GetDotsOnLineFrom(Dot src)
     {
         List<Dot> dots = new List<Dot>();
         
@@ -216,10 +242,12 @@ public class DotsBoard : Singleton<DotsBoard>
         if (dots.Count <= 1)
             dots.Clear();
         
+        UnvisitAllDots();
+        
         return dots;
     }
 
-    public List<Dot> GetDotsInSquare(List<Dot> square)
+    private List<Dot> GetDotsInSquare(List<Dot> square)
     {
         List<Dot> dotsInSquare = new List<Dot>();
         List<Dot> cornersOnSquare = GetCornerDots(square);
@@ -245,22 +273,11 @@ public class DotsBoard : Singleton<DotsBoard>
                     continue;
 
                 Dot dot = _dots[col, row];
-                int dotIndex = GetIndex(dot);
-                if (_visited[dotIndex])
-                    continue;
-
-                _visited[dotIndex] = true;
                 dotsInSquare.Add(dot);
             }
         }
 
         return dotsInSquare;
-    }
-    
-    public void RemoveDots(List<Dot> dots)
-    {
-        IEnumerator shrinkDots = ShrinkDots(dots, DropAllDotsDown);
-        StartCoroutine(shrinkDots);
     }
 
     private IEnumerator ShrinkDots(List<Dot> dots, Action<HashSet<int>> onShrinkCompleted)
@@ -316,6 +333,20 @@ public class DotsBoard : Singleton<DotsBoard>
     private float GetYAt(int row)
     {
         return _dotSpacing - (_dotSpacing * row);
+    }
+    
+    private int CountEdgesAt(Dot src)
+    {
+        int numEdges = 0;
+
+        List<Dot> dotsAroundSrc = GetDotsAround(src);
+        foreach (Dot dst in dotsAroundSrc)
+        {
+            if (ContainsEdge(src, dst))
+                numEdges++;
+        }
+
+        return numEdges;
     }
 
     private Color GenerateRandomColor()

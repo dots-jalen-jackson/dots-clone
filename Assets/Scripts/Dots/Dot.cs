@@ -44,7 +44,7 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
         _rectTransform = GetComponent<RectTransform>();
     }
 
-    private void Reset()
+    public void Reset()
     {
         _rectTransform.localScale = Vector3.one;
         
@@ -59,7 +59,20 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
 
     public virtual void OnPointerDown(PointerEventData eventData)
     {
-        StartCoroutine(OnDotSelected());
+        switch (eventData.button)
+        {
+            case PointerEventData.InputButton.Left:
+                StartCoroutine(OnDotSelected());
+                break;
+            case PointerEventData.InputButton.Right:
+                
+                if (DotsLineRenderer.Instance.IsLine)
+                    return;
+                
+                DotsBoard.Instance.RemoveDot(this);
+                break;
+        }
+        
     }
 
     public virtual void OnBeginDrag(PointerEventData eventData)
@@ -102,45 +115,33 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
         {
             DotsLineRenderer.Instance.ConnectDots(lastDotPointed, this);
             DotsBoard.Instance.AddEdge(lastDotPointed, this);
+            
+            if (DotsBoard.Instance.IsSquareFormed())
+            {
+                foreach (Dot dot in DotsBoard.Instance.GetDotsToRemove(this))
+                {
+                    dot.StopAllCoroutines();
+                    dot.StartCoroutine(dot.OnDotSelected());
+                }
+            }
         }
         
         eventData.pointerDrag = gameObject;
-        
-        StopAllCoroutines();
-        StartCoroutine(OnDotSelected());
+
+        if (DotsBoard.Instance.IsSquareFormed()) 
+            return;
+
+        if (DotsLineRenderer.Instance.IsLine)
+        {
+            StopAllCoroutines();
+            StartCoroutine(OnDotSelected());
+        }
     }
 
     public virtual void OnEndDrag(PointerEventData eventData)
     {
-        List<Dot> dotsToRemove;
-        if (!DotsBoard.Instance.IsSquareFormed())
-        {
-            dotsToRemove = DotsBoard.Instance.GetDotsOnLineFrom(this);
-        }
-        else
-        {
-            dotsToRemove = DotsBoard.Instance.GetDotsWithColor(Color);
-
-            List<Dot> square = DotsBoard.Instance.GetDotsOnLineFrom(this);
-            List<Dot> dotsInSquare = DotsBoard.Instance.GetDotsInSquare(square);
-
-            dotsToRemove.AddRange(dotsInSquare);
-            dotsToRemove = dotsToRemove.Distinct().ToList();
-        }
-
-        foreach (Dot dot in dotsToRemove)
-        {
-            dot.StopAllCoroutines();
-            dot.Reset();
-        }
-
-        DotsBoard.Instance.ResetBoard();
         DotsLineRenderer.Instance.ClearLine();
-
-        if (dotsToRemove.Count <= 0)
-            return;
-        
-        DotsBoard.Instance.RemoveDots(dotsToRemove);
+        DotsBoard.Instance.RemoveDots(this);
     }
 
     public void Shrink(Action onShrinkCompleted)

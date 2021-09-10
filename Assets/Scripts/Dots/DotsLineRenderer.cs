@@ -10,6 +10,8 @@ public class DotsLineRenderer : Singleton<DotsLineRenderer>
 
     private Camera _mainCamera;
 
+    public bool IsLine => _lineRenderer.positionCount > 1;
+
     // Start is called before the first frame update
     void Start()
     {
