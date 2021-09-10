@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -258,18 +259,38 @@ public class DotsBoard : Singleton<DotsBoard>
     
     public void RemoveDots(List<Dot> dots)
     {
+        IEnumerator shrinkDots = ShrinkDots(dots, DropAllDotsDown);
+        StartCoroutine(shrinkDots);
+    }
+
+    private IEnumerator ShrinkDots(List<Dot> dots, Action<HashSet<int>> onShrinkCompleted)
+    {
+        int removedDotsCount = 0;
         HashSet<int> cols = new HashSet<int>();
-        dots.ForEach((dot) =>
+        
+        foreach (Dot dot in dots)
         {
-            int row = dot.Row;
-            int col = dot.Col;
+            dot.Shrink(() =>
+            {
+                int row = dot.Row;
+                int col = dot.Col;
             
-            _dotsPooler.ReturnPooledObject(dot.gameObject);
-            _dots[col, row] = null;
+                _dotsPooler.ReturnPooledObject(dot.gameObject);
+                _dots[col, row] = null;
+            
+                cols.Add(col);
 
-            cols.Add(col);
-        });
+                removedDotsCount++;
+            });
+        }
 
+        yield return new WaitUntil(() => removedDotsCount == dots.Count);
+        
+        onShrinkCompleted?.Invoke(cols);
+    }
+
+    private void DropAllDotsDown(HashSet<int> cols)
+    {
         foreach (int col in cols)
             DropDotsDown(col);
     }
@@ -328,7 +349,6 @@ public class DotsBoard : Singleton<DotsBoard>
             _dotColorsSpawnedCounts[dotColor]++;
         else
             _dotColorsSpawnedCounts[dotColor] = 0;
-        
         
         _totalDotsCountSpawned++;
     }

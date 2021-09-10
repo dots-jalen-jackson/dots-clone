@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -13,6 +14,9 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
 
     [SerializeField] 
     private Image _dotSelectedImage;
+
+    [SerializeField, Range(1f, 10f)] 
+    private float _dotRemoveScaleMulitplier = 5f;
     
     private RectTransform _rectTransform;
 
@@ -38,6 +42,19 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
     public void Awake()
     {
         _rectTransform = GetComponent<RectTransform>();
+    }
+
+    private void Reset()
+    {
+        _rectTransform.localScale = Vector3.one;
+        
+        _dotSelectedImage.color = new Color(Color.r, Color.g, Color.b, 0.0f);
+        _dotSelectedImage.rectTransform.localScale = Vector3.one;
+    }
+
+    private void OnEnable()
+    {
+        Reset();
     }
 
     public virtual void OnPointerDown(PointerEventData eventData)
@@ -114,9 +131,9 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
         foreach (Dot dot in dotsToRemove)
         {
             dot.StopAllCoroutines();
-            dot.ResetSelectedImage();
+            dot.Reset();
         }
-        
+
         DotsBoard.Instance.ResetBoard();
         DotsLineRenderer.Instance.ClearLine();
 
@@ -126,32 +143,49 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
         DotsBoard.Instance.RemoveDots(dotsToRemove);
     }
 
-    private void ResetSelectedImage()
+    public void Shrink(Action onShrinkCompleted)
     {
-        _dotSelectedImage.color = new Color(Color.r, Color.g, Color.b, 0.0f);
-        _dotSelectedImage.rectTransform.localScale = Vector3.one;
+        StopAllCoroutines();
+        StartCoroutine(OnDotRemoved(onShrinkCompleted));
     }
 
     private IEnumerator OnDotSelected()
     {
         Color dotSelectedStartColor = new Color(Color.r, Color.g, Color.b, 1.0f);
-        Vector3 dotSelectedStartScale = Vector3.one;
+        Vector2 dotSelectedStartScale = Vector2.one;
 
         float scaleSpeed = ColliderSize / Size;
         float scaleMultiplier = scaleSpeed + 1;
         
         Color dotSelectedEndColor = new Color(Color.r, Color.g, Color.b, 0.0f);
-        Vector3 dotSelectedEndScale = dotSelectedStartScale * scaleMultiplier;
+        Vector2 dotSelectedEndScale = dotSelectedStartScale * scaleMultiplier;
 
         float t = 0.0f;
         while (t < 1.0f)
         {
             _dotSelectedImage.color = Color.Lerp(dotSelectedStartColor, dotSelectedEndColor, t);
-            _dotSelectedImage.rectTransform.localScale = Vector3.Lerp(dotSelectedStartScale, dotSelectedEndScale, t);
+            _dotSelectedImage.rectTransform.localScale = Vector2.Lerp(dotSelectedStartScale, dotSelectedEndScale, t);
 
             t += Time.deltaTime * scaleSpeed;
             yield return null;
         }
+    }
+
+    private IEnumerator OnDotRemoved(Action onShrinkCompleted)
+    {
+        Vector2 dotRemovedStartScale = Vector2.one;
+        Vector2 dotRemovedEndScale = Vector2.zero;
+
+        float t = 0.0f;
+        while (t < 1.0f)
+        {
+            _rectTransform.localScale = Vector2.Lerp(dotRemovedStartScale, dotRemovedEndScale, t);
+
+            t += Time.deltaTime * _dotRemoveScaleMulitplier;
+            yield return null;
+        }
+        
+        onShrinkCompleted?.Invoke();
     }
 
     private bool IsAroundSameColoredDot(Dot dot)
