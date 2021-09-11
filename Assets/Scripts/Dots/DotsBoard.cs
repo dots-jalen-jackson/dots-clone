@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Unity.Rendering.HybridV2;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -19,9 +20,10 @@ public class DotsBoard : Singleton<DotsBoard>
     private ObjectPooler _dotsPooler;
     private Dot [,] _dots;
     private Stack<Dot> _prevDots;
-    private Stack<Dot> _formedSquareDots;
     private bool[,] _edges;
     private bool[] _visited;
+
+    private Dot _formedSquareDot;
 
     private Dictionary<Color, int> _dotColorsSpawnedCounts;
     private int _totalDotsCountSpawned;
@@ -32,7 +34,7 @@ public class DotsBoard : Singleton<DotsBoard>
 
     private int _dotSpacing => _dotSize * 2;
 
-    public bool IsSquareFormed() => _formedSquareDots.Count > 0;
+    public bool IsSquareFormed { get; private set; }
 
     private void Awake()
     {
@@ -68,7 +70,6 @@ public class DotsBoard : Singleton<DotsBoard>
         _edges = new bool[_numDots * _numDots, _numDots * _numDots];
         _visited = new bool[_numDots];
         _prevDots = new Stack<Dot>();
-        _formedSquareDots = new Stack<Dot>();
         _dotColorsSpawnedCounts = new Dictionary<Color, int>();
         _totalDotsCountSpawned = 0;
 
@@ -102,9 +103,17 @@ public class DotsBoard : Singleton<DotsBoard>
         _edges[dstIndex, srcIndex] = true;
 
         _prevDots.Push(src);
-
-        if (CountEdgesAt(dst) > 1)
-            _formedSquareDots.Push(dst);
+        
+        if (!IsSquareFormed)
+        {
+            if (CountEdgesAt(dst) > 1)
+            {
+                _formedSquareDot = dst;
+                IsSquareFormed = true;
+                
+                HighlightDots(GetDotsToRemove(dst));
+            }
+        }
     }
 
     public void RemoveEdge(Dot src, Dot dst)
@@ -115,13 +124,20 @@ public class DotsBoard : Singleton<DotsBoard>
         _edges[srcIndex, dstIndex] = false;
         _edges[dstIndex, srcIndex] = false;
         
-        _prevDots.Pop();
-
-        if (IsSquareFormed())
+        if (IsSquareFormed)
         {
-            if (CountEdgesAt(src) <= 1)
-                _formedSquareDots.Pop();
+            if (_formedSquareDot == src)
+            {
+                if (CountEdgesAt(src) <= 1)
+                    IsSquareFormed = false;
+            }
+            else if (_formedSquareDot == dst)
+            {
+                HighlightDots(GetDotsToRemove(dst));
+            }
         }
+        
+        _prevDots.Pop();
     }
 
     public bool ContainsEdge(Dot src, Dot dst)
@@ -179,7 +195,7 @@ public class DotsBoard : Singleton<DotsBoard>
     public List<Dot> GetDotsToRemove(Dot src)
     {
         List<Dot> line = GetDotsOnLineFrom(src);
-        if (!IsSquareFormed())
+        if (!IsSquareFormed)
             return line;
 
         List<Dot> dotsWithSrcColor = GetDotsWithColor(src.Color);
@@ -384,6 +400,14 @@ public class DotsBoard : Singleton<DotsBoard>
         _totalDotsCountSpawned++;
     }
     
+    private void HighlightDots(List<Dot> dots)
+    {
+        foreach (Dot dot in dots)
+        {
+            dot.Highlight();
+        }
+    }
+    
     private void DropDotsDown(int col)
     {
         int startRow = _boardHeight - 1;
@@ -546,7 +570,9 @@ public class DotsBoard : Singleton<DotsBoard>
     private void ClearEdges()
     {
         _prevDots.Clear();
-        _formedSquareDots.Clear();
+        _formedSquareDot = null;
+        IsSquareFormed = false;
+        
         for (int i = 0; i < _numDots * _numDots; i++)
         {
             for (int j = 0; j < _numDots * _numDots; j++)

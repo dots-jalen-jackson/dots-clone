@@ -115,22 +115,10 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
         {
             DotsBoard.Instance.AddEdge(lastDotPointed, this);
             DotsLineRenderer.Instance.ConnectDots(lastDotPointed, this);
-            
-            if (DotsBoard.Instance.IsSquareFormed())
-            {
-                foreach (Dot dot in DotsBoard.Instance.GetDotsToRemove(this))
-                {
-                    dot.StopAllCoroutines();
-                    dot.StartCoroutine(dot.OnDotSelected());
-                }
-            }
         }
         
         eventData.pointerDrag = gameObject;
-
-        if (DotsBoard.Instance.IsSquareFormed()) 
-            return;
-
+        
         if (DotsLineRenderer.Instance.IsLine)
         {
             StopAllCoroutines();
@@ -148,6 +136,12 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
     {
         StopAllCoroutines();
         StartCoroutine(OnDotRemoved(onShrinkCompleted));
+    }
+
+    public void Highlight()
+    {
+        StopAllCoroutines();
+        StartCoroutine(OnDotSelected());
     }
 
     private IEnumerator OnDotSelected()

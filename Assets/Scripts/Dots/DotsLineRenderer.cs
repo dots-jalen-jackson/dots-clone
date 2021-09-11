@@ -84,8 +84,8 @@ public class DotsLineRenderer : Singleton<DotsLineRenderer>
         
         StrengthenConnectionBetweenDots(beginPosition, endPosition);
         AddDotToLine(endDot);
-
-        if (!DotsBoard.Instance.IsSquareFormed())
+        
+        if (!DotsBoard.Instance.IsSquareFormed)
         {
             IncreaseTopHUDLine();
             IncreaseBottomHUDLine();
@@ -99,6 +99,9 @@ public class DotsLineRenderer : Singleton<DotsLineRenderer>
         _dotsLineRenderer.positionCount -= 3;
         _currentIndex -= 3;
         _numDots--;
+
+        if (DotsBoard.Instance.IsSquareFormed)
+            return;
         
         DecreaseTopHUDLine();
         DecreaseBottomHUDLine();
