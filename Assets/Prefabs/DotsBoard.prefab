@@ -44,8 +44,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5fa583d03100a844e938ae2fcb6c501a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _topHUDLineRenderer: {fileID: 5970282724515538297}
-  _bottomHUDLineRenderer: {fileID: 3953660407099257427}
+  _topHUDLineRenderer: {fileID: 7652759635311924903}
+  _bottomHUDLineRenderer: {fileID: 8076008228369652704}
+  _increaseHUDLineScaleMultiplier: 1.5
 --- !u!120 &654599926143455277
 LineRenderer:
   m_ObjectHideFlags: 0
@@ -226,7 +227,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4524990720470269146}
-  - component: {fileID: 5970282724515538297}
   - component: {fileID: 7652759635311924903}
   m_Layer: 5
   m_Name: DotsTopHUD
@@ -254,19 +254,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &5970282724515538297
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8023311302633014925}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ad4bdaaf1a58aeb40bf5bd29cb1766de, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _increaseScaleMultiplier: 5
 --- !u!120 &7652759635311924903
 LineRenderer:
   m_ObjectHideFlags: 0
@@ -374,7 +361,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1290244739800974630}
-  - component: {fileID: 3953660407099257427}
   - component: {fileID: 8076008228369652704}
   m_Layer: 5
   m_Name: DotsBotHUD
@@ -402,19 +388,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &3953660407099257427
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8484739619636721534}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ad4bdaaf1a58aeb40bf5bd29cb1766de, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _increaseScaleMultiplier: 5
 --- !u!120 &8076008228369652704
 LineRenderer:
   m_ObjectHideFlags: 0

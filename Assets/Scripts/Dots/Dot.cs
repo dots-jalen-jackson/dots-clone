@@ -140,7 +140,7 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
 
     public virtual void OnEndDrag(PointerEventData eventData)
     {
-        DotsLineRenderer.Instance.ClearLine();
+        DotsLineRenderer.Instance.ClearLines();
         DotsBoard.Instance.RemoveDots(this);
     }
 
