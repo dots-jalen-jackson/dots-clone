@@ -108,13 +108,13 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
             if (!isBackAtPreviousDot)
                 return;
             
-            DotsLineRenderer.Instance.RemoveLastConnectedDotInLine();
             DotsBoard.Instance.RemoveEdge(lastDotPointed, this);
+            DotsLineRenderer.Instance.RemoveLastConnectedDotInLine();
         }
         else
         {
-            DotsLineRenderer.Instance.ConnectDots(lastDotPointed, this);
             DotsBoard.Instance.AddEdge(lastDotPointed, this);
+            DotsLineRenderer.Instance.ConnectDots(lastDotPointed, this);
             
             if (DotsBoard.Instance.IsSquareFormed())
             {

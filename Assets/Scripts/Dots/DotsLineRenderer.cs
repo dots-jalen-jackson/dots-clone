@@ -4,6 +4,12 @@ using Vector3 = UnityEngine.Vector3;
 
 public class DotsLineRenderer : Singleton<DotsLineRenderer>
 {
+    [SerializeField] 
+    private DotsHUDLineRenderer _topHUDLineRenderer;
+    
+    [SerializeField] 
+    private DotsHUDLineRenderer _bottomHUDLineRenderer;
+    
     private LineRenderer _lineRenderer;
 
     private int _currentIndex;
@@ -27,6 +33,9 @@ public class DotsLineRenderer : Singleton<DotsLineRenderer>
     {
         _lineRenderer.startColor = color;
         _lineRenderer.endColor = color;
+
+        _topHUDLineRenderer.SetColor(color);
+        _bottomHUDLineRenderer.SetColor(color);
     }
 
     public void ClearLine()
@@ -35,6 +44,9 @@ public class DotsLineRenderer : Singleton<DotsLineRenderer>
         
         _lineRenderer.positionCount = 1;
         _lineRenderer.SetPosition(_currentIndex, Vector3.zero);
+        
+        _topHUDLineRenderer.ClearLine();
+        _bottomHUDLineRenderer.ClearLine();
     }
 
     public void AddDotToLine(Dot dot)
@@ -49,12 +61,26 @@ public class DotsLineRenderer : Singleton<DotsLineRenderer>
         
         StrengthenConnectionBetweenDots(beginPosition, endPosition);
         AddDotToLine(endDot);
+
+        if (!DotsBoard.Instance.IsSquareFormed())
+        {
+            _topHUDLineRenderer.IncreaseLineAtTop();
+            _bottomHUDLineRenderer.IncreaseLineAtBottom();
+        }
+        else
+        {
+            _topHUDLineRenderer.MakeTopHalfOfSquare();
+            _bottomHUDLineRenderer.MakeBottomHalfOfSquare();
+        }
     }
     
     public void RemoveLastConnectedDotInLine()
     {
         _lineRenderer.positionCount -= 3;
         _currentIndex -= 3;
+        
+        _topHUDLineRenderer.DecreaseLineAtTop();
+        _bottomHUDLineRenderer.DecreaseLineAtBottom();
     }
 
     public void SetCurrentPosition(Vector2 position)
