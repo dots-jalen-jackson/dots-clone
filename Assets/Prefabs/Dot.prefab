@@ -242,3 +242,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _dotImage: {fileID: 69643313537382020}
   _dotSelectedImage: {fileID: 3069322825895815861}
+  _dotRemoveScaleMulitplier: 30
+  _dotMoveSpeed: 9

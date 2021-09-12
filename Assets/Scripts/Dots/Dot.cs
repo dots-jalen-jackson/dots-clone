@@ -14,16 +14,20 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
 
     [SerializeField] 
     private Image _dotSelectedImage;
-
-    [SerializeField, Range(1f, 10f)] 
-    private float _dotRemoveScaleMulitplier = 5f;
+    
+    [SerializeField]
+    private float _dotRemoveScaleMulitplier;
+    
+    [SerializeField]
+    private float _dotMoveSpeed;
     
     private RectTransform _rectTransform;
 
     private float ColliderSize => _rectTransform.rect.width;
 
-    public int Row => DotsBoard.Instance.GetRowAtPosition(Position);
-    public int Col => DotsBoard.Instance.GetColAtPosition(Position);
+    public int Row { get; set; }
+    
+    public int Col { get; set; }
 
     public Color Color
     {
@@ -143,7 +147,24 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
         StopAllCoroutines();
         StartCoroutine(OnDotSelected());
     }
+    
+    public IEnumerator MoveTo(Vector2 endPosition)
+    {
+        Vector2 startPosition = Position;
 
+        float t = 0.0f;
+        while (t < 1.0f)
+        {
+            Position = Vector2.Lerp(startPosition, endPosition, t);
+            t += Time.deltaTime * _dotMoveSpeed;
+            yield return null;
+        }
+
+        Position = endPosition;
+        Col = DotsBoard.Instance.GetColAtPosition(Position);
+        Row = DotsBoard.Instance.GetRowAtPosition(Position);
+    }
+    
     private IEnumerator OnDotSelected()
     {
         Color dotSelectedStartColor = new Color(Color.r, Color.g, Color.b, 1.0f);
