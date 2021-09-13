@@ -18,9 +18,6 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
     [SerializeField]
     private float _dotRemoveScaleMulitplier;
     
-    [SerializeField]
-    private float _dotMoveSpeed;
-    
     private RectTransform _rectTransform;
 
     private float ColliderSize => _rectTransform.rect.width;
@@ -28,6 +25,8 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
     public int Row { get; set; }
     
     public int Col { get; set; }
+    
+    public bool IsInBoard { get; set; }
 
     public Color Color
     {
@@ -46,6 +45,7 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
     public void Awake()
     {
         _rectTransform = GetComponent<RectTransform>();
+        IsInBoard = false;
     }
 
     public void Reset()
@@ -63,6 +63,9 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
 
     public virtual void OnPointerDown(PointerEventData eventData)
     {
+        if (!IsInBoard)
+            return;
+    
         switch (eventData.button)
         {
             case PointerEventData.InputButton.Left:
@@ -81,12 +84,18 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
 
     public virtual void OnBeginDrag(PointerEventData eventData)
     {
+        if (!IsInBoard)
+            return;
+        
         DotsLineRenderer.Instance.AddDotToLine(this);
         DotsLineRenderer.Instance.SetLineColor(Color);
     }
 
     public virtual void OnDrag(PointerEventData eventData)
     {
+        if (!IsInBoard)
+            return;
+        
         if (eventData.pointerEnter != gameObject)
             DotsLineRenderer.Instance.SetCurrentPosition(eventData.position);
         else
@@ -96,6 +105,9 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
 
     public virtual void OnPointerEnter(PointerEventData eventData)
     {
+        if (!IsInBoard)
+            return;
+        
         if (!eventData.dragging)
             return;
         
@@ -132,6 +144,9 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
 
     public virtual void OnEndDrag(PointerEventData eventData)
     {
+        if (!IsInBoard)
+            return;
+        
         DotsLineRenderer.Instance.ClearLines();
         DotsBoard.Instance.RemoveDots(this);
     }
@@ -148,7 +163,7 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
         StartCoroutine(OnDotSelected());
     }
     
-    public IEnumerator MoveTo(Vector2 endPosition)
+    public IEnumerator MoveTo(Vector2 endPosition, float moveSpeed)
     {
         Vector2 startPosition = Position;
 
@@ -156,7 +171,7 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
         while (t < 1.0f)
         {
             Position = Vector2.Lerp(startPosition, endPosition, t);
-            t += Time.deltaTime * _dotMoveSpeed;
+            t += Time.deltaTime * moveSpeed;
             yield return null;
         }
 
