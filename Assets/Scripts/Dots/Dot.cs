@@ -26,8 +26,6 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
     public int Row { get; set; }
     
     public int Col { get; set; }
-    
-    public bool IsInBoard { get; set; }
 
     public Color Color => _color;
 
@@ -42,7 +40,6 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
     public void Awake()
     {
         _rectTransform = GetComponent<RectTransform>();
-        IsInBoard = false;
     }
 
     public void Reset()
@@ -63,92 +60,27 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
 
     public virtual void OnPointerDown(PointerEventData eventData)
     {
-        if (!IsInBoard)
-            return;
-    
-        switch (eventData.button)
-        {
-            case PointerEventData.InputButton.Left:
-                StartCoroutine(OnDotSelected());
-                break;
-            case PointerEventData.InputButton.Right:
-                
-                if (DotsLineRenderer.Instance.IsLine)
-                    return;
-                
-                DotsBoard.Instance.RemoveDot(this);
-                break;
-        }
-        
+        DotsInputHandler.Instance.OnDotClicked(this, eventData);
     }
 
     public virtual void OnBeginDrag(PointerEventData eventData)
     {
-        if (!IsInBoard)
-            return;
-        
-        DotsLineRenderer.Instance.AddDotToLine(this);
-        DotsLineRenderer.Instance.SetLineColor(Color);
+        DotsInputHandler.Instance.OnDotBeginLine(this, eventData);
     }
 
     public virtual void OnDrag(PointerEventData eventData)
     {
-        if (!IsInBoard)
-            return;
-        
-        if (eventData.pointerEnter != gameObject)
-            DotsLineRenderer.Instance.SetCurrentPosition(eventData.position);
-        else
-            DotsLineRenderer.Instance.SetCurrentPosition(transform.position);
-        
+        DotsInputHandler.Instance.OnDotUpdatingLine(this, eventData);
     }
 
     public virtual void OnPointerEnter(PointerEventData eventData)
     {
-        if (!IsInBoard)
-            return;
-        
-        if (!eventData.dragging)
-            return;
-        
-        Dot lastDotPointed = eventData.pointerDrag.GetComponent<Dot>();
-        
-        bool isLastDotNeighbor = this.IsAroundSameColoredDot(lastDotPointed);
-        if (!isLastDotNeighbor) 
-            return;
-        
-        bool isEdgeExists = DotsBoard.Instance.ContainsEdge(lastDotPointed, this);
-        if (isEdgeExists)
-        {
-            bool isBackAtPreviousDot = DotsBoard.Instance.IsDotPreviousSource(this);
-            if (!isBackAtPreviousDot)
-                return;
-            
-            DotsBoard.Instance.RemoveEdge(lastDotPointed, this);
-            DotsLineRenderer.Instance.RemoveLastConnectedDotInLine();
-        }
-        else
-        {
-            DotsBoard.Instance.AddEdge(lastDotPointed, this);
-            DotsLineRenderer.Instance.ConnectDots(lastDotPointed, this);
-        }
-        
-        eventData.pointerDrag = gameObject;
-        
-        if (DotsLineRenderer.Instance.IsLine)
-        {
-            StopAllCoroutines();
-            StartCoroutine(OnDotSelected());
-        }
+        DotsInputHandler.Instance.OnDotLineUpdated(this, eventData);
     }
 
     public virtual void OnEndDrag(PointerEventData eventData)
     {
-        if (!IsInBoard)
-            return;
-        
-        DotsLineRenderer.Instance.ClearLines();
-        DotsBoard.Instance.RemoveDots(this);
+        DotsInputHandler.Instance.OnDotEndLine(this);
     }
 
     public void Shrink(Action onShrinkCompleted)
@@ -161,6 +93,12 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
     {
         StopAllCoroutines();
         StartCoroutine(OnDotSelected());
+    }
+    
+    public bool IsAroundSameColoredDot(Dot dot)
+    {
+        List<Dot> surroundingDots = DotsBoard.Instance.GetSameColoredDotsAround(dot);
+        return surroundingDots.Contains(this);
     }
     
     public IEnumerator MoveTo(Vector2 endPosition, float moveSpeed)
@@ -217,11 +155,5 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
         }
         
         onShrinkCompleted?.Invoke();
-    }
-
-    private bool IsAroundSameColoredDot(Dot dot)
-    {
-        List<Dot> surroundingDots = DotsBoard.Instance.GetSameColoredDotsAround(dot);
-        return surroundingDots.Contains(this);
     }
 }

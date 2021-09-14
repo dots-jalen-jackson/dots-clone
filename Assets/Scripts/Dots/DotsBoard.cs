@@ -106,13 +106,7 @@ public class DotsBoard : Singleton<DotsBoard>
             row--;
         }
 
-        for (int col = 0; col < _boardWidth; col++)
-        {
-            for (row = 0; row < _boardHeight; row++)
-            {
-                _dots[col, row].IsInBoard = true;
-            }
-        }
+        DotsInputHandler.Instance.IsInputEnabled = true;
     }
 
     public int GetRowAtPosition(Vector2 position)
