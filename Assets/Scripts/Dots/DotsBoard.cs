@@ -10,7 +10,6 @@ public class DotsBoard : Singleton<DotsBoard>
 {
     [SerializeField] private int _boardWidth = 6;
     [SerializeField] private int _boardHeight = 6;
-    [SerializeField] private DotsColorPalette _dotsColorPalette;
 
     private RectTransform _rectTransform;
 
@@ -20,8 +19,6 @@ public class DotsBoard : Singleton<DotsBoard>
     private bool[] _visited;
 
     private Dot _formedSquareDot;
-
-    public DotsColorPalette ColorPalette => _dotsColorPalette;
 
     public bool IsSquareFormed { get; private set; }
 

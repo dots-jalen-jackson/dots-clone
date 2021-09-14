@@ -46,7 +46,7 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
     {
         _rectTransform.localScale = Vector3.one;
 
-        _color = DotsBoard.Instance.ColorPalette.GetRandomColor();
+        _color = DotsGenerator.Instance.ColorPalette.GetRandomColor();
         
         _dotImage.color = Color;
         _dotSelectedImage.color = new Color(Color.r, Color.g, Color.b, 0.0f);

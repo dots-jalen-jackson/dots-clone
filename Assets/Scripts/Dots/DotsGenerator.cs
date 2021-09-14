@@ -7,6 +7,9 @@ using UnityEngine;
 [DefaultExecutionOrder(0)]
 public class DotsGenerator : Singleton<DotsGenerator>
 {
+    [SerializeField] 
+    private DotsColorPalette _dotsColorPalette;
+    
     private ObjectPooler _dotsPooler;
 
     private int _dotSize;
@@ -16,6 +19,8 @@ public class DotsGenerator : Singleton<DotsGenerator>
     public int DotSpacing => _dotSize * 2;
     
     public int NumDots => _dotsPooler.ObjectPoolSize;
+
+    public DotsColorPalette ColorPalette => _dotsColorPalette;
 
     public void Start()
     {
