@@ -19,6 +19,8 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
     
     private RectTransform _rectTransform;
 
+    private Color _color;
+
     private float ColliderSize => _rectTransform.rect.width;
 
     public int Row { get; set; }
@@ -27,11 +29,7 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
     
     public bool IsInBoard { get; set; }
 
-    public Color Color
-    {
-        get => _dotImage.color;
-        set => _dotImage.color = value;
-    }
+    public Color Color => _color;
 
     public Vector2 Position
     {
@@ -50,7 +48,10 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
     public void Reset()
     {
         _rectTransform.localScale = Vector3.one;
+
+        _color = DotsBoard.Instance.ColorPalette.GetRandomColor();
         
+        _dotImage.color = Color;
         _dotSelectedImage.color = new Color(Color.r, Color.g, Color.b, 0.0f);
         _dotSelectedImage.rectTransform.localScale = Vector3.one;
     }

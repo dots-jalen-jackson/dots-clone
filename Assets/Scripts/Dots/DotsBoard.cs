@@ -11,7 +11,7 @@ public class DotsBoard : Singleton<DotsBoard>
 {
     [SerializeField] private int _boardWidth = 6;
     [SerializeField] private int _boardHeight = 6;
-    [SerializeField] private Color[] _dotColors;
+    [SerializeField] private DotsColorPalette _dotsColorPalette;
     [SerializeField] private float _dotPopulateSpeed = 6.0f;
     [SerializeField] private float _dotDropSpeed = 9.0f;
 
@@ -25,15 +25,14 @@ public class DotsBoard : Singleton<DotsBoard>
 
     private Dot _formedSquareDot;
 
-    private Dictionary<Color, int> _dotColorsSpawnedCounts;
-    private int _totalDotsCountSpawned;
-
     private int _dotSize;
     private float _dotSpawnPositionY;
 
     private int _numDots => _dotsPooler.ObjectPoolSize;
 
     private int _dotSpacing => _dotSize * 2;
+
+    public DotsColorPalette ColorPalette => _dotsColorPalette;
 
     public bool IsSquareFormed { get; private set; }
 
@@ -71,8 +70,6 @@ public class DotsBoard : Singleton<DotsBoard>
         _edges = new bool[_numDots * _numDots, _numDots * _numDots];
         _visited = new bool[_numDots];
         _prevDots = new Stack<Dot>();
-        _dotColorsSpawnedCounts = new Dictionary<Color, int>();
-        _totalDotsCountSpawned = 0;
 
         _dotSpawnPositionY = _dotSpacing * 4.0f;
 
@@ -88,7 +85,7 @@ public class DotsBoard : Singleton<DotsBoard>
                 Vector2 startPosition = new Vector2(x, (topY - y) + _dotSpawnPositionY * (_boardHeight / 2.0f));
                 Vector2 targetPosition = new Vector2(x, y);
 
-                Dot dot = GenerateDot(col, row, GenerateRandomColor);
+                Dot dot = GenerateDot(col, row);
                 dot.Position = startPosition;
                 dot.Col = col;
                 
@@ -394,13 +391,7 @@ public class DotsBoard : Singleton<DotsBoard>
         return numEdges;
     }
 
-    private Color GenerateRandomColor()
-    {
-        Color color = _dotColors[Random.Range(0, _dotColors.Length)];
-        return color;
-    }
-
-    private Dot GenerateDot(int col, int row, Func<Color> randomColorGenerator)
+    private Dot GenerateDot(int col, int row)
     {
         if (row < 0 || row >= _boardHeight || col < 0 || col >= _boardWidth)
             return null;
@@ -410,23 +401,14 @@ public class DotsBoard : Singleton<DotsBoard>
             return null;
         
         _dots[col, row] = dotObject.GetComponent<Dot>();
-        _dots[col, row].Color = randomColorGenerator.Invoke();
         _dots[col, row].gameObject.SetActive(true);
-        
-        Color dotColor = _dots[col, row].Color;
-        if (_dotColorsSpawnedCounts.ContainsKey(dotColor))
-            _dotColorsSpawnedCounts[dotColor]++;
-        else
-            _dotColorsSpawnedCounts[dotColor] = 0;
-        
-        _totalDotsCountSpawned++;
 
         return _dots[col, row];
     }
 
-    private IEnumerator GenerateDot(int col, int row, Vector2 startPosition, float moveSpeed, Func<Color> randomColorGenerator)
+    private IEnumerator GenerateDot(int col, int row, Vector2 startPosition, float moveSpeed)
     {
-        Dot newDot = GenerateDot(col, row, randomColorGenerator);
+        Dot newDot = GenerateDot(col, row);
         if (newDot == null)
             yield break;
 
@@ -496,26 +478,9 @@ public class DotsBoard : Singleton<DotsBoard>
         {
             Vector2 startPosition = new Vector2(GetXAt(col), _dotSpawnPositionY);
             
-            yield return GenerateDot(col, currentRow, startPosition, _dotDropSpeed, GenerateRandomColorBasedOffDotSpawnCounts);
+            yield return GenerateDot(col, currentRow, startPosition, _dotDropSpeed);
             currentRow--;
         }
-    }
-
-    private Color GenerateRandomColorBasedOffDotSpawnCounts()
-    {
-        Color color = GenerateRandomColor();
-        
-        foreach (Color dotColor in _dotColors)
-        {
-            int numDotsWithColorSpawned = _dotColorsSpawnedCounts[dotColor];
-            float percentageDotsWithColorSpawned = (float)numDotsWithColorSpawned / _totalDotsCountSpawned;
-
-            if (Random.Range(0.0f, 1.0f) < percentageDotsWithColorSpawned)
-                color = dotColor;
-        }
-
-
-        return color;
     }
     
     private bool IsDotCorner(Dot src)
