@@ -45,12 +45,9 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
     public void Reset()
     {
         _rectTransform.localScale = Vector3.one;
-
-        _color = DotsGenerator.Instance.ColorPalette.GetRandomColor();
-        
-        _dotImage.color = Color;
-        _dotSelectedImage.color = new Color(Color.r, Color.g, Color.b, 0.0f);
         _dotSelectedImage.rectTransform.localScale = Vector3.one;
+        
+        SetRandomColor();
     }
 
     private void OnEnable()
@@ -116,6 +113,14 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
         Position = endPosition;
         Col = DotsBoard.Instance.GetColAtPosition(Position);
         Row = DotsBoard.Instance.GetRowAtPosition(Position);
+    }
+    
+    private void SetRandomColor()
+    {
+        _color = DotsGenerator.Instance.ColorPalette.GetRandomColor();
+        
+        _dotImage.color = Color;
+        _dotSelectedImage.color = new Color(Color.r, Color.g, Color.b, 0.0f);
     }
     
     private IEnumerator OnDotSelected()
