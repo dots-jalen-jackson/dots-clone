@@ -154,6 +154,8 @@ GameObject:
   m_Component:
   - component: {fileID: 4744882345616421850}
   - component: {fileID: 4744882345616421852}
+  - component: {fileID: 8018211494938022505}
+  - component: {fileID: 3204051312007924607}
   - component: {fileID: 4744882345616421853}
   m_Layer: 5
   m_Name: DotsBoard
@@ -204,6 +206,30 @@ MonoBehaviour:
     RedColor: {r: 0.93725497, g: 0.3647059, b: 0.25882354, a: 1}
     GreenColor: {r: 0.54901963, g: 0.9215687, b: 0.5803922, a: 1}
     YellowColor: {r: 0.90196085, g: 0.8588236, b: 0.12941177, a: 1}
+--- !u!114 &8018211494938022505
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4744882345616421851}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4a5e57429a5d6724dbbfb2a1bd514a29, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &3204051312007924607
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4744882345616421851}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 06e9585edfca66545bd774759da76b7c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
   _dotPopulateSpeed: 6
   _dotDropSpeed: 9
 --- !u!114 &4744882345616421853

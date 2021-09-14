@@ -24,7 +24,7 @@ public class DotsInputHandler : Singleton<DotsInputHandler>
                 if (DotsLineRenderer.Instance.IsLine)
                     return;
                 
-                DotsBoard.Instance.RemoveDot(dot);
+                DotsBoardUpdater.Instance.StartRemoveDot(dot);
                 break;
         }
     }
@@ -91,6 +91,8 @@ public class DotsInputHandler : Singleton<DotsInputHandler>
             return;
         
         DotsLineRenderer.Instance.ClearLines();
-        DotsBoard.Instance.RemoveDots(dot);
+
+        List<Dot> dotsToRemove = DotsBoard.Instance.GetDotsToRemove(dot);
+        DotsBoardUpdater.Instance.StartRemovingDots(dotsToRemove);
     }
 }
