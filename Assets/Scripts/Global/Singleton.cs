@@ -1,7 +1,15 @@
 ﻿using UnityEngine;
 
+/// <summary>
+/// Make sures that there is only one instance of the component T
+/// </summary>
+/// <typeparam name="T">The component that we went to only have one instance of in game</typeparam>
 public class Singleton<T> : MonoBehaviour where T : Component
 {
+    /// <summary>
+    /// Instantiate a game object with component T if it doesn't exists
+    /// Get the only instance of component T if it does exists
+    /// </summary>
     private static T _instance;
 
     public static T Instance
@@ -28,6 +36,9 @@ public class Singleton<T> : MonoBehaviour where T : Component
         }
     }
 
+    /// <summary>
+    /// Destroys the only instance of component T
+    /// </summary>
     private void OnDestroy()
     {
         if (_instance == this)
