@@ -43,7 +43,8 @@ public class DotsGenerator : Singleton<DotsGenerator>
             return null;
         
         dot.Position = startPosition;
-        dot.Col = col;
+        dot.Col = DotsBoard.Instance.GetColAtPosition(startPosition);
+        dot.Row = DotsBoard.Instance.GetRowAtPosition(startPosition);;
 
         return dot;
     }
