@@ -55,6 +55,23 @@ public class DotsBoard : Singleton<DotsBoard>
         _rectTransform.anchoredPosition = new Vector2(centerX, centerY);
     }
 
+    public bool IsBoardFilled()
+    {
+        for (int col = 0; col < _boardWidth; col++)
+        {
+            for (int row = 0; row < _boardHeight; row++)
+            {
+                if (_dots[col, row] == null)
+                    return false;
+
+                if (!_dots[col, row].IsAt(col, row))
+                    return false;
+            }
+        }
+
+        return true;
+    }
+
     public int GetRowAtPosition(Vector2 position)
     {
         int dotSpacing = DotsGenerator.Instance.DotSpacing;
@@ -213,6 +230,39 @@ public class DotsBoard : Singleton<DotsBoard>
     public bool IsDotPreviousSource(Dot dot)
     {
         return dot == _prevDots.Peek();
+    }
+
+    public bool IsPossibleDotConnections()
+    {
+        Queue<Dot> q = new Queue<Dot>();
+        q.Enqueue(_dots[0, 0]);
+
+        while (q.Count > 0)
+        {
+            Dot cur = q.Dequeue();
+            int curIndex = GetIndex(cur);
+            _visited[curIndex] = true;
+
+            List<Dot> sameDotsAroundCur = GetSameColoredDotsAround(cur);
+            if (sameDotsAroundCur.Count > 0)
+            {
+                UnvisitAllDots();
+                return true;
+            }
+
+            List<Dot> allDotsAroundCur = GetDotsAround(cur);
+            foreach (Dot dot in allDotsAroundCur)
+            {
+                int dotIndex = GetIndex(dot);
+                if (_visited[dotIndex])
+                    continue;
+
+                q.Enqueue(_dots[dot.Col, dot.Row]);
+            }
+        }
+        
+        UnvisitAllDots();
+        return false;
     }
 
     public List<Dot> GetSameColoredDotsAround(Dot dot)

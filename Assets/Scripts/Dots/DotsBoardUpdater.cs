@@ -10,6 +10,8 @@ public class DotsBoardUpdater : Singleton<DotsBoardUpdater>
     [SerializeField] private float _dotDropSpeed = 9.0f;
     [SerializeField] private float _dotSwapSpeed = 9.0f;
 
+    [SerializeField] private float _dotAutoShuffleDelay = 1.0f;
+
     private float _dotSpawnPositionY;
 
     public void StartPopulatingBoard()
@@ -105,6 +107,8 @@ public class DotsBoardUpdater : Singleton<DotsBoardUpdater>
             row--;
         }
 
+        yield return AutoShuffleBoard(_dotAutoShuffleDelay);
+
         DotsInputHandler.Instance.IsInputEnabled = true;
     }
     
@@ -194,6 +198,10 @@ public class DotsBoardUpdater : Singleton<DotsBoardUpdater>
             currentRow--;
         }
 
+        yield return new WaitUntil(() => DotsBoard.Instance.IsBoardFilled());
+
+        yield return AutoShuffleBoard(_dotAutoShuffleDelay);
+
         DotsInputHandler.Instance.IsInputEnabled = true;
     }
     
@@ -208,6 +216,15 @@ public class DotsBoardUpdater : Singleton<DotsBoardUpdater>
         Vector2 targetPosition = new Vector2(newDot.Position.x, DotsBoard.Instance.GetYAt(row));
 
         yield return newDot.MoveTo(targetPosition, moveSpeed);
+    }
+    
+    private IEnumerator AutoShuffleBoard(float onShuffleCompletedDelay)
+    {
+        while (!DotsBoard.Instance.IsPossibleDotConnections())
+        {
+            yield return ShuffleBoard();
+            yield return new WaitForSeconds(onShuffleCompletedDelay);
+        }
     }
     
     private IEnumerator ShuffleBoard()
@@ -262,8 +279,6 @@ public class DotsBoardUpdater : Singleton<DotsBoardUpdater>
         }
 
         yield return new WaitUntil(() => numTimesShuffled == twoDotsToShuffleList.Count);
-        
-        DotsInputHandler.Instance.IsInputEnabled = true;
     }
 
     private IEnumerator SwapDots(Dot dotOne, Dot dotTwo, float swapSpeed, Action onSwapCompleted)
@@ -287,5 +302,4 @@ public class DotsBoardUpdater : Singleton<DotsBoardUpdater>
 
         onSwapCompleted?.Invoke();
     }
-    
 }
