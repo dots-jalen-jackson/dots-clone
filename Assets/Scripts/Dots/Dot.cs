@@ -62,7 +62,7 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
 
     public virtual void OnBeginDrag(PointerEventData eventData)
     {
-        DotsInputHandler.Instance.OnDotBeginLine(this, eventData);
+        DotsInputHandler.Instance.OnDotBeginLine(this);
     }
 
     public virtual void OnDrag(PointerEventData eventData)
