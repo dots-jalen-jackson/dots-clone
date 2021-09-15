@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 public class DotsBoardUpdater : Singleton<DotsBoardUpdater>
 {
@@ -13,6 +14,11 @@ public class DotsBoardUpdater : Singleton<DotsBoardUpdater>
     public void StartPopulatingBoard()
     {
         StartCoroutine(PopulateBoard());
+    }
+
+    public void StartShufflingBoard()
+    {
+        StartCoroutine(ShuffleBoard());
     }
     
     public void StartHighlightingDots(List<Dot> dots)
@@ -52,6 +58,7 @@ public class DotsBoardUpdater : Singleton<DotsBoardUpdater>
         StartShrinkingDots(dots);
     }
     
+
     private void StartDroppingDotsDownInCol(int col)
     {
         StartCoroutine(DropDotsDown(col));
@@ -197,4 +204,83 @@ public class DotsBoardUpdater : Singleton<DotsBoardUpdater>
 
         yield return newDot.MoveTo(targetPosition, moveSpeed);
     }
+    
+    private IEnumerator ShuffleBoard()
+    {
+        DotsInputHandler.Instance.IsInputEnabled = false;
+        
+        int boardWidth = DotsBoard.Instance.BoardWidth;
+        int boardHeight = DotsBoard.Instance.BoardHeight;
+
+        List<Tuple<Dot, Dot>> twoDotsToShuffleList = new List<Tuple<Dot, Dot>>();
+
+        for (int col = 0; col < boardWidth; col++)
+        {
+            for (int row = 0; row < boardHeight; row++)
+            {
+                Dot cur = DotsBoard.Instance.GetDotAt(col, row);
+                if (DotsBoard.Instance.IsDotVisited(cur))
+                    continue;
+
+                List<Dot> dotsAroundCur = DotsBoard.Instance.GetDifferentColoredDotsAround(cur);
+                dotsAroundCur.RemoveAll((dot) => DotsBoard.Instance.IsDotVisited(dot));
+                if (dotsAroundCur.Count <= 0)
+                    continue;
+
+                Dot diffColorDot = dotsAroundCur[Random.Range(0, dotsAroundCur.Count)];
+
+                List<Dot> dotsAroundDiffColorDot = DotsBoard.Instance.GetSameColoredDotsAround(diffColorDot, cur.Color);
+                dotsAroundDiffColorDot.RemoveAll((dot) => DotsBoard.Instance.IsDotVisited(dot));
+                if (dotsAroundDiffColorDot.Count <= 0)
+                    continue;
+                
+                Dot sameColorDot = dotsAroundDiffColorDot[Random.Range(0, dotsAroundDiffColorDot.Count)];
+
+                Tuple<Dot, Dot> twoDotsToShuffle = new Tuple<Dot, Dot>(diffColorDot, sameColorDot);
+                twoDotsToShuffleList.Add(twoDotsToShuffle);
+                
+                DotsBoard.Instance.SetDotVisited(diffColorDot, true);
+                DotsBoard.Instance.SetDotVisited(sameColorDot, true);
+            }
+        }
+        
+        DotsBoard.Instance.UnvisitAllDots();
+
+        int numTimesShuffled = 0;
+
+        foreach (Tuple<Dot, Dot> twoDots in twoDotsToShuffleList)
+        {
+            Dot dotOne = twoDots.Item1;
+            Dot dotTwo = twoDots.Item2;
+
+            StartCoroutine(SwapDots(dotOne, dotTwo, _dotDropSpeed, () => numTimesShuffled++));
+        }
+
+        yield return new WaitUntil(() => numTimesShuffled == twoDotsToShuffleList.Count);
+        
+        DotsInputHandler.Instance.IsInputEnabled = true;
+    }
+
+    private IEnumerator SwapDots(Dot dotOne, Dot dotTwo, float swapSpeed, Action onSwapCompleted)
+    {
+        Vector2 dotOnePosition = dotOne.Position;
+        Vector2 dotTwoPosition = dotTwo.Position;
+
+        int dotOneCol = dotOne.Col;
+        int dotOneRow = dotOne.Row;
+        
+        int dotTwoCol = dotTwo.Col;
+        int dotTwoRow = dotTwo.Row;
+
+        StartCoroutine(dotOne.MoveTo(dotTwoPosition, swapSpeed));
+        StartCoroutine(dotTwo.MoveTo(dotOnePosition, swapSpeed));
+
+        yield return new WaitUntil(() => dotOne.IsAt(dotTwoCol, dotTwoRow) && dotTwo.IsAt(dotOneCol, dotOneRow));
+        
+        DotsBoard.Instance.PlaceDotAt(dotOneCol, dotOneRow, dotTwo);
+        DotsBoard.Instance.PlaceDotAt(dotTwoCol, dotTwoRow, dotOne);
+
+        onSwapCompleted?.Invoke();
+    }
+    
 }

@@ -97,6 +97,11 @@ public class Dot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandl
         List<Dot> surroundingDots = DotsBoard.Instance.GetSameColoredDotsAround(dot);
         return surroundingDots.Contains(this);
     }
+
+    public bool IsAt(int col, int row)
+    {
+        return Col == col && Row == row;
+    }
     
     public IEnumerator MoveTo(Vector2 endPosition, float moveSpeed)
     {

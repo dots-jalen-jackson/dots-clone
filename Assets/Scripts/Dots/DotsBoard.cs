@@ -91,6 +91,12 @@ public class DotsBoard : Singleton<DotsBoard>
         _dots[col, row] = dot;
     }
 
+    public void SetDotVisited(Dot dot, bool isVisited)
+    {
+        int dotIndex = GetIndex(dot);
+        _visited[dotIndex] = isVisited;
+    }
+
     public void ShiftDotDown(int col, int currentRow, int targetRow)
     {
         _dots[col, targetRow] = _dots[col, currentRow];
@@ -116,6 +122,21 @@ public class DotsBoard : Singleton<DotsBoard>
         }
 
         return true;
+    }
+
+    public bool IsDotVisited(Dot dot)
+    {
+        int dotIndex = GetIndex(dot);
+        return _visited[dotIndex];
+    }
+    
+    public void UnvisitAllDots()
+    {
+        int numDots = DotsGenerator.Instance.NumDots;
+        for (int i = 0; i < numDots; i++)
+        {
+            _visited[i] = false;
+        }
     }
     
     public void AddEdge(Dot src, Dot dst)
@@ -198,6 +219,22 @@ public class DotsBoard : Singleton<DotsBoard>
     {
         List<Dot> dots = GetDotsAround(dot);
         dots.RemoveAll(((d) => d.Color != dot.Color));
+
+        return dots;
+    }
+    
+    public List<Dot> GetSameColoredDotsAround(Dot dot, Color color)
+    {
+        List<Dot> dots = GetDotsAround(dot);
+        dots.RemoveAll(((d) => d.Color != color));
+
+        return dots;
+    }
+    
+    public List<Dot> GetDifferentColoredDotsAround(Dot dot)
+    {
+        List<Dot> dots = GetDotsAround(dot);
+        dots.RemoveAll(((d) => d.Color == dot.Color));
 
         return dots;
     }
@@ -419,14 +456,5 @@ public class DotsBoard : Singleton<DotsBoard>
         }
 
         return cornerDots;
-    }
-
-    private void UnvisitAllDots()
-    {
-        int numDots = DotsGenerator.Instance.NumDots;
-        for (int i = 0; i < numDots; i++)
-        {
-            _visited[i] = false;
-        }
     }
 }
