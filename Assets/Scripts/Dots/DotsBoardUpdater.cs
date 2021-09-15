@@ -31,6 +31,7 @@ public class DotsBoardUpdater : Singleton<DotsBoardUpdater>
             int col = src.Col;
 
             DotsGenerator.Instance.ReturnDotToPool(col, row);
+            
             StartDroppingDotsDownInCol(col);
         });
     }
@@ -112,7 +113,6 @@ public class DotsBoardUpdater : Singleton<DotsBoardUpdater>
                 int col = dot.Col;
 
                 DotsGenerator.Instance.ReturnDotToPool(col, row);
-                DotsBoard.Instance.PlaceDotAt(col, row, null);
 
                 cols.Add(col);
 

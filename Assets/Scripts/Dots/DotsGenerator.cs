@@ -56,6 +56,7 @@ public class DotsGenerator : Singleton<DotsGenerator>
             return;
         
         _dotsPooler.ReturnPooledObject(dot.gameObject);
+        DotsBoard.Instance.PlaceDotAt(col, row, null);
     }
 
     private Dot CreateDot(int col, int row)
