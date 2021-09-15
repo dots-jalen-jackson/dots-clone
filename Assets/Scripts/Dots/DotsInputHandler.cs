@@ -7,6 +7,13 @@ using UnityEngine.EventSystems;
 
 public class DotsInputHandler : Singleton<DotsInputHandler>
 {
+    private Camera _mainCamera;
+
+    private void Awake()
+    {
+        _mainCamera = Camera.main;
+    }
+
     public bool IsInputEnabled { get; set; }
 
     public void OnDotClicked(Dot dot, PointerEventData eventData)
@@ -42,9 +49,13 @@ public class DotsInputHandler : Singleton<DotsInputHandler>
     {
         if (!IsInputEnabled)
             return;
-        
+
         if (eventData.pointerEnter != dot.gameObject)
-            DotsLineRenderer.Instance.SetCurrentPosition(eventData.position);
+        {
+            Vector2 mousePosition = _mainCamera.ScreenToWorldPoint(eventData.position);
+
+            DotsLineRenderer.Instance.SetCurrentPosition(mousePosition);
+        }
         else
             DotsLineRenderer.Instance.SetCurrentPosition(dot.transform.position);
     }

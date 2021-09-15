@@ -99,16 +99,14 @@ public class DotsLineRenderer : Singleton<DotsLineRenderer>
 
     public void SetCurrentPosition(Vector2 position)
     {
-        Vector2 curPosition = _mainCamera.ScreenToWorldPoint(position);
-        _dotsLineRenderer.SetPosition(_currentIndex, curPosition);
+        _dotsLineRenderer.SetPosition(_currentIndex, position);
     }
     
     private void UpdateCurrentPosition(Vector2 position)
     {
         _dotsLineRenderer.positionCount++;
         
-        Vector2 curPosition = _mainCamera.ScreenToWorldPoint(position);
-        _dotsLineRenderer.SetPosition(_currentIndex++, curPosition);
+        _dotsLineRenderer.SetPosition(_currentIndex++, position);
     }
     
     private void StrengthenConnectionBetweenDots(Vector2 dotBeginPosition, Vector2 dotEndPosition)
