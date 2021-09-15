@@ -10,9 +10,6 @@ public class DotsLineRenderer : Singleton<DotsLineRenderer>
 
     [SerializeField] 
     private LineRenderer _bottomHUDLineRenderer;
-
-    [SerializeField] 
-    private float _increaseHUDLineScaleMultiplier = 1.5f;
     
     private LineRenderer _dotsLineRenderer;
 
@@ -20,15 +17,11 @@ public class DotsLineRenderer : Singleton<DotsLineRenderer>
 
     private int _numDots;
 
-    private Stack<Vector4> _topHUDLinePositions;
-
-    private Stack<Vector4> _bottomHUDLinePositions;
-
     private Camera _mainCamera;
 
     private float LeftCorner => _mainCamera.ViewportToWorldPoint(Vector3.up).x;
 
-    private float TopHUDLine => _mainCamera.ViewportToWorldPoint(Vector3.up).y;
+    private float TopOfScreen => _mainCamera.ViewportToWorldPoint(Vector3.up).y;
 
     public bool IsLine => _dotsLineRenderer.positionCount > 1;
 
@@ -42,9 +35,6 @@ public class DotsLineRenderer : Singleton<DotsLineRenderer>
         
         _dotsLineRenderer = GetComponent<LineRenderer>();
         _dotsLineRenderer.positionCount = 1;
-
-        _topHUDLinePositions = new Stack<Vector4>();
-        _bottomHUDLinePositions = new Stack<Vector4>();
     }
     
     public void SetLineColor(Color color)
@@ -87,8 +77,8 @@ public class DotsLineRenderer : Singleton<DotsLineRenderer>
         
         if (!DotsBoard.Instance.IsSquareFormed)
         {
-            IncreaseTopHUDLine();
-            IncreaseBottomHUDLine();
+            UpdateTopHUDLine();
+            UpdateBottomHUDLine();
         }
         else
             MakeSquareInHUD();
@@ -103,8 +93,8 @@ public class DotsLineRenderer : Singleton<DotsLineRenderer>
         if (DotsBoard.Instance.IsSquareFormed)
             return;
         
-        DecreaseTopHUDLine();
-        DecreaseBottomHUDLine();
+        UpdateTopHUDLine();
+        UpdateBottomHUDLine();
     }
 
     public void SetCurrentPosition(Vector2 position)
@@ -131,78 +121,83 @@ public class DotsLineRenderer : Singleton<DotsLineRenderer>
     }
     
     #region Dots HUD Line Renderer
-    private void IncreaseTopHUDLine()
+    private void UpdateTopHUDLine()
     {
-        _topHUDLineRenderer.positionCount = 2;
+        Vector2 topCenter = new Vector2(0, TopOfScreen);
+        
+        Vector2 topLeftSide = new Vector2(LeftCorner, TopOfScreen);
+        Vector2 topRightSide = new Vector2(-LeftCorner, TopOfScreen);
 
-        float increaseLineBy = _increaseHUDLineScaleMultiplier * _numDots;
-        
-        Vector2 topLeftPosition = new Vector2(_topHUDLineRenderer.GetPosition(0).x - increaseLineBy, TopHUDLine);
-        Vector2 topRightPosition = new Vector2(_topHUDLineRenderer.GetPosition(1).x + increaseLineBy, TopHUDLine);
-        
-        _topHUDLineRenderer.SetPosition(0, topLeftPosition);
-        _topHUDLineRenderer.SetPosition(1, topRightPosition);
-        
-        _topHUDLinePositions.Push(new Vector4(topLeftPosition.x, topLeftPosition.y, topRightPosition.x, topRightPosition.y));
-    }
+        float topT = (_numDots - 1) * (1f / _topHUDLineRenderer.startWidth);
 
-    private void IncreaseBottomHUDLine()
-    {
-        _topHUDLineRenderer.positionCount = 2;
+        Vector2 topHUDLineLeftSide = Vector2.Lerp(topCenter, topLeftSide, topT);
+        Vector2 topHUDLineRightSide = Vector2.Lerp(topCenter, topRightSide, topT);
+
+        _topHUDLineRenderer.positionCount = topT <= 1.0f ? 2 : 4;
         
-        float increaseLineBy = _increaseHUDLineScaleMultiplier * _numDots;
-        
-        Vector2 botLeftPosition = new Vector2(_bottomHUDLineRenderer.GetPosition(0).x - increaseLineBy, -TopHUDLine);
-        Vector2 botRightPosition = new Vector2(_bottomHUDLineRenderer.GetPosition(1).x + increaseLineBy, -TopHUDLine);
-        
-        _bottomHUDLineRenderer.SetPosition(0, botLeftPosition);
-        _bottomHUDLineRenderer.SetPosition(1, botRightPosition);
-        
-        _bottomHUDLinePositions.Push(new Vector4(botLeftPosition.x, botLeftPosition.y, botRightPosition.x, botRightPosition.y));
-    }
-    
-    private void DecreaseTopHUDLine()
-    {
-        if (_numDots <= 1)
+
+        switch (_topHUDLineRenderer.positionCount)
         {
-            ClearTopLine();
-            return;
+            case 2:
+                _topHUDLineRenderer.SetPosition(0, topHUDLineLeftSide);
+                _topHUDLineRenderer.SetPosition(1, topHUDLineRightSide);
+                break;
+            case 4:
+                _topHUDLineRenderer.SetPosition(1, topLeftSide);
+                _topHUDLineRenderer.SetPosition(2, topRightSide);
+                
+                Vector2 midCenterLeft = new Vector2(LeftCorner, 0);
+                Vector2 midCenterRight = new Vector2(-LeftCorner, 0);
+
+                float midT = (_numDots * (1f / _topHUDLineRenderer.startWidth)) - 1f;
+
+                Vector2 topHUDLineCenterLeftSide = Vector2.Lerp(topLeftSide, midCenterLeft, midT);
+                Vector2 topHUDLineCenterRightSide = Vector2.Lerp(topRightSide, midCenterRight, midT);
+                
+                _topHUDLineRenderer.SetPosition(0, topHUDLineCenterLeftSide);
+                _topHUDLineRenderer.SetPosition(3, topHUDLineCenterRightSide);
+                
+                break;
         }
-
-        if (_topHUDLineRenderer.positionCount == 4)
-            _topHUDLineRenderer.positionCount = 2;
-        else
-            _topHUDLinePositions.Pop();
-
-        Vector4 lastTopLinePositions = _topHUDLinePositions.Peek();
-
-        Vector2 topLeftPosition = new Vector2(lastTopLinePositions.x, lastTopLinePositions.y);
-        Vector2 topRightPosition = new Vector2(lastTopLinePositions.z, lastTopLinePositions.w);
-        
-        _topHUDLineRenderer.SetPosition(0, topLeftPosition);
-        _topHUDLineRenderer.SetPosition(1, topRightPosition);
     }
 
-    private void DecreaseBottomHUDLine()
+    private void UpdateBottomHUDLine()
     {
-        if (_numDots <= 1)
-        {
-            ClearBottomLine();
-            return;
-        }
+        Vector2 botCenter = new Vector2(0, -TopOfScreen);
+        
+        Vector2 botLeftSide = new Vector2(LeftCorner, -TopOfScreen);
+        Vector2 botRightSide = new Vector2(-LeftCorner, -TopOfScreen);
 
-        if (_bottomHUDLineRenderer.positionCount == 4)
-            _bottomHUDLineRenderer.positionCount = 2;
-        else
-            _bottomHUDLinePositions.Pop();
-        
-        Vector4 lastBottomLinePositions = _bottomHUDLinePositions.Peek();
-        
-        Vector2 botLeftPosition = new Vector2(lastBottomLinePositions.x, lastBottomLinePositions.y);
-        Vector2 botRightPosition = new Vector2(lastBottomLinePositions.z, lastBottomLinePositions.w);
-        
-        _bottomHUDLineRenderer.SetPosition(0, botLeftPosition);
-        _bottomHUDLineRenderer.SetPosition(1, botRightPosition);
+        float botT = (_numDots - 1) * (1f / _bottomHUDLineRenderer.startWidth);
+
+        Vector2 botHUDLineLeftSide = Vector2.Lerp(botCenter, botLeftSide, botT);
+        Vector2 botHUDLineRightSide = Vector2.Lerp(botCenter, botRightSide, botT);
+
+        _bottomHUDLineRenderer.positionCount = botT <= 1.0f ? 2 : 4;
+
+        switch (_bottomHUDLineRenderer.positionCount)
+        {
+            case 2:
+                _bottomHUDLineRenderer.SetPosition(0, botHUDLineLeftSide);
+                _bottomHUDLineRenderer.SetPosition(1, botHUDLineRightSide);
+                break;
+            case 4:
+                _bottomHUDLineRenderer.SetPosition(1, botLeftSide);
+                _bottomHUDLineRenderer.SetPosition(2, botRightSide);
+                
+                Vector2 midCenterLeft = new Vector2(LeftCorner, 0);
+                Vector2 midCenterRight = new Vector2(-LeftCorner, 0);
+
+                float midT = (_numDots * (1f / _bottomHUDLineRenderer.startWidth)) - 1f;
+
+                Vector2 botHUDLineCenterLeftSide = Vector2.Lerp(botLeftSide, midCenterLeft, midT);
+                Vector2 botHUDLineCenterRightSide = Vector2.Lerp(botRightSide, midCenterRight, midT);
+                
+                _bottomHUDLineRenderer.SetPosition(0, botHUDLineCenterLeftSide);
+                _bottomHUDLineRenderer.SetPosition(3, botHUDLineCenterRightSide);
+                
+                break;
+        }
     }
 
     private void MakeSquareInHUD()
@@ -212,21 +207,19 @@ public class DotsLineRenderer : Singleton<DotsLineRenderer>
         
         _topHUDLineRenderer.positionCount = 4;
         _topHUDLineRenderer.SetPosition(0, new Vector2(LeftCorner, 0));
-        _topHUDLineRenderer.SetPosition(1, new Vector2(LeftCorner, TopHUDLine));
-        _topHUDLineRenderer.SetPosition(2, new Vector2(-LeftCorner, TopHUDLine));
+        _topHUDLineRenderer.SetPosition(1, new Vector2(LeftCorner, TopOfScreen));
+        _topHUDLineRenderer.SetPosition(2, new Vector2(-LeftCorner, TopOfScreen));
         _topHUDLineRenderer.SetPosition(3, new Vector2(-LeftCorner, 0));
         
         _bottomHUDLineRenderer.positionCount = 4;
         _bottomHUDLineRenderer.SetPosition(0, new Vector2(LeftCorner, 0));
-        _bottomHUDLineRenderer.SetPosition(1, new Vector2(LeftCorner, -TopHUDLine));
-        _bottomHUDLineRenderer.SetPosition(2, new Vector2(-LeftCorner, -TopHUDLine));
+        _bottomHUDLineRenderer.SetPosition(1, new Vector2(LeftCorner, -TopOfScreen));
+        _bottomHUDLineRenderer.SetPosition(2, new Vector2(-LeftCorner, -TopOfScreen));
         _bottomHUDLineRenderer.SetPosition(3, new Vector2(-LeftCorner, 0));
     }
 
     private void ClearTopLine()
     {
-        _topHUDLinePositions.Clear();
-        
         for (int i = 0; i < _topHUDLineRenderer.positionCount; i++)
             _topHUDLineRenderer.SetPosition(i, Vector3.zero);
 
@@ -235,8 +228,6 @@ public class DotsLineRenderer : Singleton<DotsLineRenderer>
     
     private void ClearBottomLine()
     {
-        _bottomHUDLinePositions.Clear();
-        
         for (int i = 0; i < _bottomHUDLineRenderer.positionCount; i++)
             _bottomHUDLineRenderer.SetPosition(i, Vector3.zero);
 
