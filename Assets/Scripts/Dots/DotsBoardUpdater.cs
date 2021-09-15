@@ -82,7 +82,7 @@ public class DotsBoardUpdater : Singleton<DotsBoardUpdater>
     {
         int boardWidth = DotsBoard.Instance.BoardWidth;
         int boardHeight = DotsBoard.Instance.BoardHeight;
-        int boardSpacing = DotsGenerator.Instance.DotSpacing;
+        int boardSpacing = DotsBoard.Instance.BoardSpacing;
         
         _dotSpawnPositionY = boardSpacing * 4.0f;
 
@@ -154,8 +154,8 @@ public class DotsBoardUpdater : Singleton<DotsBoardUpdater>
             currentRow--;
             dotShiftCount++;
         }
-        
-        int dotSpacing = DotsGenerator.Instance.DotSpacing;
+
+        int boardSpacing = DotsBoard.Instance.BoardSpacing;
         
         do
         {
@@ -164,7 +164,7 @@ public class DotsBoardUpdater : Singleton<DotsBoardUpdater>
                 Dot currentDot = DotsBoard.Instance.GetDotAt(col, currentRow);
                 
                 
-                float endY = currentDot.Position.y - (dotSpacing * dotShiftCount);
+                float endY = currentDot.Position.y - (boardSpacing * dotShiftCount);
                 if (endY < DotsBoard.Instance.GetYAt(boardHeight - 1))
                     endY = DotsBoard.Instance.GetYAt(boardHeight - 1);
                 

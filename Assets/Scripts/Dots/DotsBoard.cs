@@ -25,6 +25,8 @@ public class DotsBoard : Singleton<DotsBoard>
     public int BoardWidth => _boardWidth;
 
     public int BoardHeight => _boardHeight;
+    
+    public int BoardSpacing => DotsGenerator.Instance.DotSize * 2;
 
     private void Awake()
     {
@@ -74,33 +76,28 @@ public class DotsBoard : Singleton<DotsBoard>
 
     public int GetRowAtPosition(Vector2 position)
     {
-        int dotSpacing = DotsGenerator.Instance.DotSpacing;
         int numDots = DotsGenerator.Instance.NumDots;
         
         float y = position.y;
-        return ((int) (dotSpacing - y) / numDots);
+        return ((int) (BoardSpacing - y) / numDots);
     }
 
     public int GetColAtPosition(Vector2 position)
     {
-        int dotSpacing = DotsGenerator.Instance.DotSpacing;
         int numDots = DotsGenerator.Instance.NumDots;
         
         float x = position.x;
-        return ((int) (x + dotSpacing) / numDots);
+        return ((int) (x + BoardSpacing) / numDots);
     }
     
     public float GetXAt(int col)
     {
-        int dotSpacing = DotsGenerator.Instance.DotSpacing;
-        
-        return (dotSpacing * col) - dotSpacing;
+        return (BoardSpacing * col) - BoardSpacing;
     }
 
     public float GetYAt(int row)
     {
-        int dotSpacing = DotsGenerator.Instance.DotSpacing;
-        return dotSpacing - (dotSpacing * row);
+        return BoardSpacing - (BoardSpacing * row);
     }
 
     public void PlaceDotAt(int col, int row, Dot dot)

@@ -15,8 +15,6 @@ public class DotsGenerator : Singleton<DotsGenerator>
     private int _dotSize;
 
     public int DotSize => _dotSize;
-
-    public int DotSpacing => _dotSize * 2;
     
     public int NumDots => _dotsPooler.ObjectPoolSize;
 
