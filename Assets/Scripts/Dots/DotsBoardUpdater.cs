@@ -135,6 +135,8 @@ public class DotsBoardUpdater : Singleton<DotsBoardUpdater>
     
     private IEnumerator DropDotsDown(int col)
     {
+        DotsInputHandler.Instance.IsInputEnabled = false;
+        
         int boardHeight = DotsBoard.Instance.BoardHeight;
         int startRow = boardHeight - 1;
 
@@ -191,6 +193,8 @@ public class DotsBoardUpdater : Singleton<DotsBoardUpdater>
             yield return GenerateDotAtPosition(col, currentRow, startPosition, _dotDropSpeed);
             currentRow--;
         }
+
+        DotsInputHandler.Instance.IsInputEnabled = true;
     }
     
     private IEnumerator GenerateDotAtPosition(int col, int row, Vector2 startPosition, float moveSpeed)
