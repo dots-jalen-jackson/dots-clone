@@ -8,6 +8,7 @@ public class DotsBoardUpdater : Singleton<DotsBoardUpdater>
 {
     [SerializeField] private float _dotPopulateSpeed = 6.0f;
     [SerializeField] private float _dotDropSpeed = 9.0f;
+    [SerializeField] private float _dotSwapSpeed = 9.0f;
 
     private float _dotSpawnPositionY;
 
@@ -253,7 +254,7 @@ public class DotsBoardUpdater : Singleton<DotsBoardUpdater>
             Dot dotOne = twoDots.Item1;
             Dot dotTwo = twoDots.Item2;
 
-            StartCoroutine(SwapDots(dotOne, dotTwo, _dotDropSpeed, () => numTimesShuffled++));
+            StartCoroutine(SwapDots(dotOne, dotTwo, _dotSwapSpeed, () => numTimesShuffled++));
         }
 
         yield return new WaitUntil(() => numTimesShuffled == twoDotsToShuffleList.Count);

@@ -46,7 +46,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _topHUDLineRenderer: {fileID: 7652759635311924903}
   _bottomHUDLineRenderer: {fileID: 8076008228369652704}
-  _increaseHUDLineScaleMultiplier: 1.5
 --- !u!120 &654599926143455277
 LineRenderer:
   m_ObjectHideFlags: 0
@@ -233,6 +232,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _dotPopulateSpeed: 6
   _dotDropSpeed: 9
+  _dotSwapSpeed: 9
 --- !u!114 &4744882345616421853
 MonoBehaviour:
   m_ObjectHideFlags: 0
