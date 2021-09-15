@@ -212,10 +212,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _dotsColorPalette:
-    Colors:
+    colors:
     - {r: 0.6117647, g: 0.3647059, b: 0.70980394, a: 1}
-    - {r: 0.93725497, g: 0.3647059, b: 0.25882354, a: 1}
     - {r: 0.54901963, g: 0.74509805, b: 1, a: 1}
+    - {r: 0.93725497, g: 0.3647059, b: 0.25882354, a: 1}
     - {r: 0.54901963, g: 0.9215687, b: 0.5803922, a: 1}
     - {r: 0.90196085, g: 0.8588236, b: 0.12941177, a: 1}
 --- !u!114 &3204051312007924607
@@ -233,6 +233,7 @@ MonoBehaviour:
   _dotPopulateSpeed: 6
   _dotDropSpeed: 9
   _dotSwapSpeed: 9
+  _dotAutoShuffleDelay: 1
 --- !u!114 &4744882345616421853
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -246,7 +247,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _objectPrefab: {fileID: 8858756726689386959, guid: 87c688d1b6c813b4c8d3a900327320b4, type: 3}
-  _isExpandable: 0
 --- !u!1 &8023311302633014925
 GameObject:
   m_ObjectHideFlags: 0
