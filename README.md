@@ -44,3 +44,10 @@ If we do, then we take it out of the pool and activate it. Otherwise, bring it b
 Since ``Instantiate`` and ``Destroy`` uses more resource heavy than toggling the activation of a game object, the Object Pooler is must more useful and avoids memory fragmentation whenever we want to respawn & destroy a game object multiple times
 
 The only time in the clone that the Object Pool was used is the [DotsGenerator](https://github.com/dots-jalen-jackson/dots-clone/blob/main/Assets/Scripts/Dots/DotsBoard.cs) for create an Object pool for the dots on the board.
+
+## Command
+
+There are functions, specifically the ienumerators, that have an action parameter that is executed once the animation is completed. For example, the Dot has an IEnumerator called ``OnDotRemoved(Action onShrinkCompleted)``. In this function, the dot scales down to 0 at a fixed amount of speed. Once the dot's scale hits 0, the ``onShrinkCompleted`` function will be invoked. Finally, when the ``StartShrinkingDot(Dot dot)`` in the ``DotsBoardUpdater`` script gets called, it starts the ``OnDotRemoved`` coroutine on that dot. This is what the ``onShrinkCompleted`` parameter's function does in this example:
+ - Returns the dot into the object pool (which deactivates the dot)
+ - Places a ``null`` reference type variable in the dot's board matrix at its row and column
+ - Starts the `DropDotsDown(int col)` coroutine at that column
